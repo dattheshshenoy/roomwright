@@ -28,7 +28,7 @@ catalogue, drag to arrange, `R` to rotate, `Delete` to remove.
 
 ## The WebMCP tools
 
-Thirteen tools, registered while the planner is open and unregistered when it
+Sixteen tools, registered while the planner is open and unregistered when it
 closes (the top bar shows the live count and lists them):
 
 | Tool | Does |
@@ -43,6 +43,9 @@ closes (the top bar shows the live count and lists them):
 | `roomwright_duplicate_item` | add another copy of a piece, offset so it doesn't overlap |
 | `roomwright_remove_item` | remove a piece |
 | `roomwright_set_room_dimensions` | resize the room (1.5–20 m) |
+| `roomwright_add_opening` | add a door or window to a wall |
+| `roomwright_update_opening` | move or resize an opening, or switch door/window |
+| `roomwright_remove_opening` | remove an opening |
 | `roomwright_suggest_spot` | where a piece could go — open floor, clear wall runs, candidate positions |
 | `roomwright_check_layout` | collisions, blocked doors/windows, clearance, narrowest walkway |
 | `roomwright_get_shopping_list` | the placed pieces as a costed shopping list |
@@ -79,11 +82,11 @@ configuration beyond `netlify.toml` (build `npm run build`, publish `dist`).
 
 ## Where this goes next
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Near-term: wider rooms, a `resize_item`
-tool for custom sizes, a `suggest_spot` tool for spatial guidance. Then a
-graphics lift, custom parametric primitives, real glTF furniture, and
-photo-assisted room setup — the catalogue, state, tools, and UI are already
-dimension-driven and model-agnostic.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Tier 1 is done (wider rooms, per-piece
+resize, spatial `suggest_spot`, editable doors and windows). Next: a graphics
+lift, custom parametric primitives, real glTF furniture, and photo-assisted room
+setup — the catalogue, state, tools, and UI are already dimension-driven and
+model-agnostic.
 
 ## Licence
 
