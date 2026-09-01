@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer, SoftShadows } from "@react-three/drei";
+import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { useStore } from "../state/store";
 import { roomCenter, roomRadius } from "./geometry";
@@ -17,7 +17,7 @@ export function SceneCanvas() {
 
   return (
     <Canvas
-      shadows
+      shadows="soft"
       dpr={[1, 2]}
       gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
       camera={{
@@ -28,8 +28,6 @@ export function SceneCanvas() {
     >
       <color attach="background" args={["#f4f3f1"]} />
       <fog attach="fog" args={["#f4f3f1", radius * 3, radius * 7]} />
-
-      <SoftShadows size={26} samples={12} focus={0.9} />
 
       <hemisphereLight intensity={0.55} color="#fdfbf6" groundColor="#d8d2c6" />
       <directionalLight

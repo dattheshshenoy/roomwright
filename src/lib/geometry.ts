@@ -64,12 +64,18 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 
+/** Y rotation that puts a piece's back (local -z) flush against the given wall. */
 const WALL_ROTATION: Record<WallSide, number> = {
-  north: 0, // faces +z (into room), back to z = length
-  south: Math.PI, // faces -z, back to z = 0
-  east: -Math.PI / 2, // back to x = width
+  south: 0, // back to z = 0, front faces +z into the room
+  north: Math.PI, // back to z = length, front faces -z
   west: Math.PI / 2, // back to x = 0
+  east: -Math.PI / 2, // back to x = width
 };
+
+/** Unit vector a piece's front faces, given its Y rotation. */
+export function frontDir(rotationY: number): [number, number] {
+  return [Math.sin(rotationY), Math.cos(rotationY)];
+}
 
 /** A reasonable spot for a freshly added piece: wall-hugging pieces go flush to
  *  the emptiest wall, everything else lands near the room centre nudged clear of

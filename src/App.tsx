@@ -2,6 +2,7 @@ import { useWebMCPTools } from "./webmcp/register";
 import type { ModelContextToolDescriptor } from "./webmcp/modelContext";
 import { SceneCanvas } from "./scene/SceneCanvas";
 import { CatalogRail } from "./ui/CatalogRail";
+import { LayoutStatus } from "./ui/LayoutStatus";
 import { useShortcuts } from "./ui/useShortcuts";
 
 /** Phase-0 placeholder tool: proves the registration path end to end.
@@ -38,6 +39,7 @@ export function App() {
 
         <main className="relative bg-surface-sunk">
           <SceneCanvas />
+          <LayoutStatus />
         </main>
 
         <aside className="border-l border-border bg-surface p-4">

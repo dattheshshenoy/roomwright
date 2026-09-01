@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useStore } from "../state/store";
 import { resolvePlacements } from "../state/selectors";
-import { collisionSet } from "./clearance";
+import { analyzeLayout, statusMap } from "./clearance";
 import { Placement } from "./Placement";
 
 const GRID = 0.05;
@@ -21,8 +21,9 @@ export function Furniture({ roomWidth, roomLength }: Props) {
   const select = useStore((s) => s.select);
   const movePlacement = useStore((s) => s.movePlacement);
 
+  const room = useStore((s) => s.room);
   const resolved = resolvePlacements(placements);
-  const colliding = collisionSet(resolved);
+  const status = statusMap(analyzeLayout(resolved, room));
 
   const [dragId, setDragId] = useState<string | null>(null);
   const grab = useRef<{ dx: number; dz: number }>({ dx: 0, dz: 0 });
@@ -50,7 +51,7 @@ export function Furniture({ roomWidth, roomLength }: Props) {
           placement={placement}
           product={product}
           selected={placement.id === selectedId}
-          colliding={colliding.has(placement.id)}
+          status={status.get(placement.id) ?? "ok"}
           onGrab={beginDrag(placement.id)}
         />
       ))}

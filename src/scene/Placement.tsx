@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
-import type { Placement as PlacementModel, Product } from "../state/types";
+import type { ClearanceStatus, Placement as PlacementModel, Product } from "../state/types";
 import { getVariant } from "../catalog/variants";
 import { FurniturePiece } from "../catalog/builders";
 import { footprintAABB } from "../lib/geometry";
@@ -9,14 +9,22 @@ interface Props {
   placement: PlacementModel;
   product: Product;
   selected: boolean;
-  colliding: boolean;
+  status: ClearanceStatus;
   onGrab: (e: ThreeEvent<PointerEvent>) => void;
 }
 
-export function Placement({ placement, product, selected, colliding, onGrab }: Props) {
-  const variant = getVariant(product, placement.variantId);
+const MARKER: Record<ClearanceStatus, { color: string; opacity: number }> = {
+  ok: { color: "#b5623c", opacity: 0.16 },
+  warn: { color: "#8a5d00", opacity: 0.24 },
+  bad: { color: "#97302c", opacity: 0.3 },
+};
 
-  const halfExtents = useMemo(() => {
+export function Placement({ placement, product, selected, status, onGrab }: Props) {
+  const variant = getVariant(product, placement.variantId);
+  const showMarker = selected || status !== "ok";
+  const marker = MARKER[status === "ok" ? "ok" : status];
+
+  const [halfX, halfZ] = useMemo(() => {
     const b = footprintAABB(placement, product);
     return [(b.maxX - b.minX) / 2, (b.maxZ - b.minZ) / 2] as const;
   }, [placement, product]);
@@ -41,13 +49,13 @@ export function Placement({ placement, product, selected, colliding, onGrab }: P
         <FurniturePiece product={product} variant={variant} />
       </group>
 
-      {selected && (
+      {showMarker && (
         <mesh position={[0, 0.008, 0]} rotation-x={-Math.PI / 2}>
-          <planeGeometry args={[halfExtents[0] * 2 + 0.12, halfExtents[1] * 2 + 0.12]} />
+          <planeGeometry args={[halfX * 2 + 0.12, halfZ * 2 + 0.12]} />
           <meshBasicMaterial
-            color={colliding ? "#97302c" : "#b5623c"}
+            color={marker.color}
             transparent
-            opacity={colliding ? 0.28 : 0.16}
+            opacity={selected ? marker.opacity + 0.08 : marker.opacity}
             depthWrite={false}
           />
         </mesh>
