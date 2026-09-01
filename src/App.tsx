@@ -1,25 +1,16 @@
 import { useWebMCPTools } from "./webmcp/register";
-import type { ModelContextToolDescriptor } from "./webmcp/modelContext";
+import { ROOMWRIGHT_TOOLS } from "./webmcp/tools";
 import { SceneCanvas } from "./scene/SceneCanvas";
 import { CatalogRail } from "./ui/CatalogRail";
 import { LayoutStatus } from "./ui/LayoutStatus";
+import { DebugPanel } from "./ui/DebugPanel";
 import { useShortcuts } from "./ui/useShortcuts";
 
-/** Phase-0 placeholder tool: proves the registration path end to end.
- *  Replaced by the eight real tools in the WebMCP phase. */
-const placeholderTools: ModelContextToolDescriptor[] = [
-  {
-    name: "roomwright_ping",
-    description: "Health check. Returns 'pong' and confirms Roomwright's tool surface is live.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
-    execute: async () => ({
-      content: [{ type: "text", text: "pong — Roomwright tools are live" }],
-    }),
-  },
-];
+const DEBUG =
+  typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
 
 export function App() {
-  useWebMCPTools(placeholderTools);
+  useWebMCPTools(ROOMWRIGHT_TOOLS);
   useShortcuts();
 
   return (
@@ -42,9 +33,13 @@ export function App() {
           <LayoutStatus />
         </main>
 
-        <aside className="border-l border-border bg-surface p-4">
-          <p className="section-label">Inspector</p>
-        </aside>
+        {DEBUG ? (
+          <DebugPanel />
+        ) : (
+          <aside className="border-l border-border bg-surface p-4">
+            <p className="section-label">Inspector</p>
+          </aside>
+        )}
       </div>
     </div>
   );
