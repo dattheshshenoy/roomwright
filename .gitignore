@@ -38,3 +38,4 @@ coverage/
 
 # personal tooling (symlink to global config)
 .cursorrules
+.playwright-cli/

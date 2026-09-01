@@ -6,7 +6,7 @@ import { analyzeLayout } from "../scene/clearance";
 import { suggestSpots, type Anchor } from "../scene/suggest";
 import { CATALOG, getProduct } from "../catalog/catalog";
 import { getVariant } from "../catalog/variants";
-import type { Category, Placement } from "../state/types";
+import type { Category, Placement, Product } from "../state/types";
 
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({
   type: "object",
@@ -20,6 +20,31 @@ const str = (description: string, extra: Record<string, unknown> = {}) => ({
   description,
   ...extra,
 });
+
+/** Resolve a product by exact id, exact name, or an unambiguous fragment of
+ *  either — so an agent can pass "milo" or "coffee table" and not have to guess
+ *  the catalogue id. */
+function resolveProduct(query: string): { product?: Product; error?: string } {
+  const all = [...CATALOG, ...useStore.getState().customProducts];
+  const q = query.trim().toLowerCase();
+  const exact =
+    all.find((p) => p.id.toLowerCase() === q) ?? all.find((p) => p.name.toLowerCase() === q);
+  if (exact) return { product: exact };
+
+  const partial = all.filter(
+    (p) => p.id.toLowerCase().includes(q) || p.name.toLowerCase().includes(q),
+  );
+  if (partial.length === 1) return { product: partial[0] };
+
+  const list = all.map((p) => `${p.id} (${p.name})`).join(", ");
+  if (partial.length > 1)
+    return {
+      error: `"${query}" matches ${partial.length} products: ${partial
+        .map((p) => `${p.id} (${p.name})`)
+        .join(", ")}. Pass one product_id.`,
+    };
+  return { error: `no product matches "${query}". Catalogue: ${list}.` };
+}
 
 function describePlacement(p: Placement) {
   const product = getProduct(p.productId);
@@ -213,7 +238,7 @@ const addItem = defineTool(
   "Place a piece in the room. Give product_id (from list_catalog). Optional: variant_id, x and z in metres, rotation_degrees. With no position the piece is auto-placed — wall-hugging pieces against the emptiest wall, others near the centre clear of what is there. Returns the new placement_id and any clearance issues it introduces.",
   obj(
     {
-      product_id: str("from list_catalog"),
+      product_id: str("a product_id from list_catalog, its exact name, or an unambiguous part of the name (e.g. \"milo\" or \"coffee table\")"),
       variant_id: str("optional variant id"),
       x: num("centre x, metres"),
       z: num("centre z, metres"),
@@ -228,7 +253,9 @@ const addItem = defineTool(
     z?: number;
     rotation_degrees?: number;
   }) => {
-    const res = useStore.getState().addPlacement(args.product_id, {
+    const found = resolveProduct(args.product_id);
+    if (!found.product) return { ok: false, summary: found.error! };
+    const res = useStore.getState().addPlacement(found.product.id, {
       variantId: args.variant_id,
       x: args.x,
       z: args.z,
@@ -237,7 +264,7 @@ const addItem = defineTool(
     if (!res.ok || !res.placementId)
       return { ok: false, summary: res.reason ?? "could not add piece" };
     const p = useStore.getState().placements.find((x) => x.id === res.placementId)!;
-    const product = getProduct(args.product_id)!;
+    const product = found.product;
     return {
       ok: true,
       summary: `Added ${product.name} at (${M2(p.x)}, ${M2(p.z)}) m.`,
@@ -441,16 +468,19 @@ const suggestSpot = defineTool(
   "roomwright_suggest_spot",
   "Ask where a piece could go. Optionally pass product_id (so the spots actually fit that piece) and near (a wall, the centre, the window, or the door) to bias the result. Returns the total open floor, the longest clear run along each wall, and up to three candidate positions with x/z in metres, a rotation, whether each sits against a wall, and how much clear space surrounds it.",
   obj({
-    product_id: str("optional — from list_catalog, so candidates fit this piece"),
+    product_id: str("optional — a product_id, name, or name fragment, so candidates fit this piece"),
     near: str("optional bias", {
       enum: ["north", "south", "east", "west", "centre", "window", "door"],
     }),
   }),
   (args: { product_id?: string; near?: Anchor }) => {
     const s = useStore.getState();
-    const product = args.product_id ? getProduct(args.product_id) : undefined;
-    if (args.product_id && !product)
-      return { ok: false, summary: `unknown product "${args.product_id}"` };
+    let product: Product | undefined;
+    if (args.product_id) {
+      const found = resolveProduct(args.product_id);
+      if (!found.product) return { ok: false, summary: found.error! };
+      product = found.product;
+    }
     const report = suggestSpots(s.room, resolvePlacements(s.placements), {
       product,
       near: args.near,
@@ -536,6 +566,38 @@ const getShoppingList = defineTool(
   },
 );
 
+/** select_item */
+const selectItem = defineTool(
+  "roomwright_select_item",
+  "Highlight a placed piece in the 3D view and open its Inspector panel, so the user can see which piece you are talking about or about to change. Pass no placement_id to clear the selection.",
+  obj({ placement_id: str("from get_room; omit to deselect") }),
+  (args: { placement_id?: string }) => {
+    if (!args.placement_id) {
+      useStore.getState().select(null);
+      return { ok: true, summary: "Selection cleared." };
+    }
+    const p = useStore.getState().placements.find((x) => x.id === args.placement_id);
+    if (!p) return { ok: false, summary: "no such piece" };
+    useStore.getState().select(args.placement_id);
+    return {
+      ok: true,
+      summary: `Selected ${getProduct(p.productId)?.name ?? "the piece"}.`,
+      payload: describePlacement(p),
+    };
+  },
+);
+
+/** set_view */
+const setSceneView = defineTool(
+  "roomwright_set_view",
+  "Switch the camera between 'orbit' (an angled 3D view of the room) and 'plan' (looking straight down at the floor plan). Use plan to let the user judge the layout, orbit to show the room.",
+  obj({ view: str("orbit or plan", { enum: ["orbit", "plan"] }) }, ["view"]),
+  (args: { view: "orbit" | "plan" }) => {
+    useStore.getState().setView(args.view === "plan" ? "top" : "orbit");
+    return { ok: true, summary: `View set to ${args.view}.` };
+  },
+);
+
 export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   getRoom,
   listCatalog,
@@ -554,4 +616,6 @@ export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   suggestSpot,
   checkLayout,
   getShoppingList,
+  selectItem,
+  setSceneView,
 ];

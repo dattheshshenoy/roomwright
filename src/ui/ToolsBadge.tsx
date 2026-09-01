@@ -9,6 +9,7 @@ import {
   Cube,
   DoorOpen,
   Eye,
+  GridFour,
   ListBullets,
   MapPin,
   PaintBrushBroad,
@@ -16,6 +17,7 @@ import {
   Receipt,
   Resize,
   Ruler,
+  Selection,
   TrashSimple,
 } from "@phosphor-icons/react";
 import { webmcpAvailable } from "../webmcp/register";
@@ -142,6 +144,22 @@ const GROUPS: ToolGroup[] = [
       { name: "remove_opening", blurb: "take an opening out", icon: <TrashSimple size={14} /> },
     ],
   },
+  {
+    label: "Show",
+    hint: "make its work visible on screen",
+    tools: [
+      {
+        name: "select_item",
+        blurb: "highlight a piece and open its Inspector",
+        icon: <Selection size={14} />,
+      },
+      {
+        name: "set_view",
+        blurb: "switch between orbit and top-down plan",
+        icon: <GridFour size={14} />,
+      },
+    ],
+  },
 ];
 
 const TOTAL = GROUPS.reduce((n, g) => n + g.tools.length, 0);
@@ -225,8 +243,8 @@ export function ToolsBadge() {
 
       <div className="border-t border-border px-4 py-2.5">
         <p className="text-[11px] leading-relaxed text-text-muted">
-          Every call is logged in Agent activity. Tools touch the room&rsquo;s contents only — never
-          the camera or the view.
+          Every call is logged in Agent activity. Tools change the room and can steer the view and
+          selection — they never move the mouse or type for you.
         </p>
       </div>
     </Popover>
