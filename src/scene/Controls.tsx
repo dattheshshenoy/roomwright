@@ -26,8 +26,8 @@ export function Controls({ center, radius }: Props) {
 
     const dest =
       view === "top"
-        ? new THREE.Vector3(center[0], radius * 2.7, center[2] + 0.001)
-        : new THREE.Vector3(center[0] + radius * 1.35, radius * 1.3, center[2] + radius * 1.55);
+        ? new THREE.Vector3(center[0], radius * 2.9, center[2] + 0.001)
+        : new THREE.Vector3(center[0] + radius * 1.5, radius * 1.12, center[2] + radius * 1.7);
 
     const from = camera.position.clone();
     const start = performance.now();

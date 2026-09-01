@@ -1,5 +1,4 @@
 import type { Placement, Product } from "./types";
-import type { Store } from "./store";
 import { getProduct } from "../catalog/catalog";
 
 export interface ResolvedPlacement {
@@ -16,14 +15,15 @@ export function resolvePlacements(placements: Placement[]): ResolvedPlacement[] 
   return out;
 }
 
-export const selectResolved = (s: Store): ResolvedPlacement[] => resolvePlacements(s.placements);
-
-export const selectSelected = (s: Store): ResolvedPlacement | null => {
-  if (!s.selectedId) return null;
-  const p = s.placements.find((x) => x.id === s.selectedId);
-  const product = p && getProduct(p.productId);
-  return p && product ? { placement: p, product } : null;
-};
+export function resolveSelected(
+  placements: Placement[],
+  selectedId: string | null,
+): ResolvedPlacement | null {
+  if (!selectedId) return null;
+  const placement = placements.find((p) => p.id === selectedId);
+  const product = placement && getProduct(placement.productId);
+  return placement && product ? { placement, product } : null;
+}
 
 export interface ShoppingLine {
   productId: string;
@@ -38,9 +38,9 @@ export interface ShoppingList {
   total: number;
 }
 
-export function selectShoppingList(s: Store): ShoppingList {
+export function computeShoppingList(placements: Placement[]): ShoppingList {
   const byProduct = new Map<string, ShoppingLine>();
-  for (const { product } of resolvePlacements(s.placements)) {
+  for (const { product } of resolvePlacements(placements)) {
     const existing = byProduct.get(product.id);
     if (existing) {
       existing.quantity += 1;

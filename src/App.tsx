@@ -6,7 +6,9 @@ import { loadSaved, startAutosave } from "./state/persistence";
 import { SceneCanvas } from "./scene/SceneCanvas";
 import { TopBar } from "./ui/TopBar";
 import { CatalogRail } from "./ui/CatalogRail";
+import { Inspector } from "./ui/Inspector";
 import { LayoutStatus } from "./ui/LayoutStatus";
+import { EmptyRoom } from "./ui/EmptyRoom";
 import { DebugPanel } from "./ui/DebugPanel";
 import { useShortcuts } from "./ui/useShortcuts";
 
@@ -34,16 +36,11 @@ export function App() {
 
         <main className="relative bg-surface-sunk">
           <SceneCanvas />
+          <EmptyRoom />
           <LayoutStatus />
         </main>
 
-        {DEBUG ? (
-          <DebugPanel />
-        ) : (
-          <aside className="border-l border-border bg-surface p-4">
-            <p className="section-label">Inspector</p>
-          </aside>
-        )}
+        {DEBUG ? <DebugPanel /> : <Inspector />}
       </div>
     </div>
   );

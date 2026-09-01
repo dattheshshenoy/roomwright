@@ -3,6 +3,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useStore } from "../state/store";
 import { resolvePlacements } from "../state/selectors";
 import { analyzeLayout, statusMap } from "./clearance";
+import { setCursor } from "../lib/cursor";
 import { Placement } from "./Placement";
 
 const GRID = 0.05;
@@ -28,19 +29,19 @@ export function Furniture({ roomWidth, roomLength }: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const grab = useRef<{ dx: number; dz: number }>({ dx: 0, dz: 0 });
 
+  const endDrag = () => {
+    setDragId(null);
+    setCursor("auto");
+  };
+
   const beginDrag = (id: string) => (e: ThreeEvent<PointerEvent>) => {
     const p = placements.find((x) => x.id === id);
     if (!p) return;
+    select(id);
     grab.current = { dx: p.x - e.point.x, dz: p.z - e.point.z };
     setDragId(id);
-    select(id);
-    document.body.style.cursor = "grabbing";
-    (e.target as Element | null)?.setPointerCapture?.(e.pointerId);
-  };
-
-  const endDrag = () => {
-    setDragId(null);
-    document.body.style.cursor = "auto";
+    setCursor("grabbing");
+    window.addEventListener("pointerup", endDrag, { once: true });
   };
 
   return (

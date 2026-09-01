@@ -4,6 +4,7 @@ import type { ClearanceStatus, Placement as PlacementModel, Product } from "../s
 import { getVariant } from "../catalog/variants";
 import { FurniturePiece } from "../catalog/builders";
 import { footprintAABB } from "../lib/geometry";
+import { setCursor } from "../lib/cursor";
 
 interface Props {
   placement: PlacementModel;
@@ -22,17 +23,20 @@ const MARKER: Record<ClearanceStatus, { color: string; opacity: number }> = {
 export function Placement({ placement, product, selected, status, onGrab }: Props) {
   const variant = getVariant(product, placement.variantId);
   const showMarker = selected || status !== "ok";
-  const marker = MARKER[status === "ok" ? "ok" : status];
+  const marker = MARKER[status];
 
   const [halfX, halfZ] = useMemo(() => {
     const b = footprintAABB(placement, product);
     return [(b.maxX - b.minX) / 2, (b.maxZ - b.minZ) / 2] as const;
   }, [placement, product]);
 
+  const hitH = Math.max(product.dims.h, 0.12);
+
   return (
     <group position={[placement.x, 0, placement.z]}>
-      <group
-        rotation-y={placement.rotationY}
+      {/* explicit, invisible click/drag target covering the piece's bounds */}
+      <mesh
+        position={[0, hitH / 2, 0]}
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           e.stopPropagation();
@@ -40,12 +44,17 @@ export function Placement({ placement, product, selected, status, onGrab }: Prop
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
-          document.body.style.cursor = "grab";
+          setCursor("grab");
         }}
         onPointerOut={() => {
-          document.body.style.cursor = "auto";
+          setCursor("auto");
         }}
       >
+        <boxGeometry args={[halfX * 2, hitH, halfZ * 2]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
+
+      <group rotation-y={placement.rotationY}>
         <FurniturePiece product={product} variant={variant} />
       </group>
 

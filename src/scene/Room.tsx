@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Room as RoomModel } from "../state/types";
+import { useStore } from "../state/store";
 import { wallFrames, wallSolids, type WallFrame } from "./geometry";
 
 const WALL_T = 0.09;
@@ -16,13 +17,14 @@ interface Props {
  *  readable (the "dollhouse" view). No ceiling. */
 export function Room({ room }: Props) {
   const frames = useMemo(() => wallFrames(room), [room]);
+  const view = useStore((s) => s.view);
 
   const wallMats = useMemo(
     () =>
       frames.map(
         () =>
           new THREE.MeshStandardMaterial({
-            color: "#efece6",
+            color: "#f0ece3",
             roughness: 0.96,
             metalness: 0,
             transparent: true,
@@ -41,16 +43,22 @@ export function Room({ room }: Props) {
   useFrame(({ camera }) => {
     frames.forEach((f, i) => {
       const mat = wallMats[i];
-      const point = f.toWorld(f.len / 2, room.height / 2);
-      const toCam = new THREE.Vector3(
-        camera.position.x - point[0],
-        0,
-        camera.position.z - point[2],
-      ).normalize();
-      const dot = toCam.dot(new THREE.Vector3(...f.normal));
-      const t = THREE.MathUtils.clamp((dot + 0.15) / 0.7, 0, 1);
-      const target = 0.08 + 0.92 * t;
-      mat.opacity += (target - mat.opacity) * 0.18;
+      let target: number;
+      if (view === "top") {
+        target = 0;
+      } else {
+        const point = f.toWorld(f.len / 2, room.height / 2);
+        const toCam = new THREE.Vector3(
+          camera.position.x - point[0],
+          0,
+          camera.position.z - point[2],
+        ).normalize();
+        const dot = toCam.dot(new THREE.Vector3(...f.normal));
+        const t = THREE.MathUtils.clamp((dot + 0.15) / 0.7, 0, 1);
+        target = t < 0.16 ? 0 : 0.1 + 0.9 * t;
+      }
+      mat.opacity += (target - mat.opacity) * 0.16;
+      mat.visible = mat.opacity > 0.02;
       mat.depthWrite = mat.opacity > 0.6;
     });
   });
@@ -62,6 +70,9 @@ export function Room({ room }: Props) {
         position={[room.width / 2, 0, room.length / 2]}
         receiveShadow
         material={floorMat}
+        onPointerDown={(e) => {
+          if (e.button === 0) useStore.getState().select(null);
+        }}
       >
         <planeGeometry args={[room.width, room.length]} />
       </mesh>

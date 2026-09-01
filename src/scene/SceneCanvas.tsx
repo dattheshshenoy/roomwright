@@ -11,35 +11,33 @@ import { Controls } from "./Controls";
  *  light standing in for a window, soft contact shadows to ground everything. */
 export function SceneCanvas() {
   const room = useStore((s) => s.room);
-  const select = useStore((s) => s.select);
   const center = roomCenter(room);
   const radius = roomRadius(room);
 
   return (
     <Canvas
-      shadows="soft"
+      shadows
       dpr={[1, 2]}
       gl={{
         antialias: true,
         preserveDrawingBuffer: true,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.05,
+        toneMappingExposure: 1.12,
       }}
       camera={{
-        fov: 40,
-        position: [center[0] + radius * 1.35, radius * 1.3, center[2] + radius * 1.55],
+        fov: 38,
+        position: [center[0] + radius * 1.5, radius * 1.12, center[2] + radius * 1.7],
       }}
-      onPointerMissed={() => select(null)}
     >
-      <color attach="background" args={["#f4f3f1"]} />
-      <fog attach="fog" args={["#f4f3f1", radius * 3, radius * 7]} />
+      <color attach="background" args={["#f2f0ec"]} />
+      <fog attach="fog" args={["#f2f0ec", radius * 3.2, radius * 7.5]} />
 
-      <hemisphereLight intensity={0.55} color="#fdfbf6" groundColor="#d8d2c6" />
+      <hemisphereLight intensity={0.7} color="#fef7ec" groundColor="#d8d2c6" />
       <directionalLight
         castShadow
-        position={[center[0] - radius * 0.8, room.height * 2.4, center[2] - radius * 0.4]}
-        intensity={1.35}
-        color="#fff3e2"
+        position={[center[0] - radius * 0.7, room.height * 2.6, center[2] - radius * 0.3]}
+        intensity={1.5}
+        color="#fff1dc"
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0002}
       >
