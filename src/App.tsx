@@ -1,6 +1,10 @@
+import { useEffect } from "react";
 import { useWebMCPTools } from "./webmcp/register";
 import { ROOMWRIGHT_TOOLS } from "./webmcp/tools";
+import { useStore } from "./state/store";
+import { loadSaved, startAutosave } from "./state/persistence";
 import { SceneCanvas } from "./scene/SceneCanvas";
+import { TopBar } from "./ui/TopBar";
 import { CatalogRail } from "./ui/CatalogRail";
 import { LayoutStatus } from "./ui/LayoutStatus";
 import { DebugPanel } from "./ui/DebugPanel";
@@ -13,15 +17,15 @@ export function App() {
   useWebMCPTools(ROOMWRIGHT_TOOLS);
   useShortcuts();
 
+  useEffect(() => {
+    const saved = loadSaved();
+    if (saved) useStore.getState().hydrate(saved);
+    return startAutosave();
+  }, []);
+
   return (
     <div className="grid h-full grid-rows-[3.25rem_1fr] bg-bg text-text">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-4">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[15px] font-semibold tracking-tight">Roomwright</span>
-          <span className="section-label">room planner</span>
-        </div>
-        <span className="tabular text-xs text-text-muted">v0.1.0</span>
-      </header>
+      <TopBar />
 
       <div className="grid grid-cols-[20rem_1fr_20rem] overflow-hidden">
         <aside className="border-r border-border bg-surface">

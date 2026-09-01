@@ -19,7 +19,12 @@ export function SceneCanvas() {
     <Canvas
       shadows="soft"
       dpr={[1, 2]}
-      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
+      gl={{
+        antialias: true,
+        preserveDrawingBuffer: true,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.05,
+      }}
       camera={{
         fov: 40,
         position: [center[0] + radius * 1.35, radius * 1.3, center[2] + radius * 1.55],
