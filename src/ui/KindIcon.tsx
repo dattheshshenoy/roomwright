@@ -17,6 +17,7 @@ const PATHS: Record<BuilderKind, string> = {
   plant:
     "M10 20h4M10.5 20l-.5-6M13.5 20l.5-6M12 14c-2-1-3.5-.5-4.5.5C8.5 12.5 10.5 12 12 13c1.5-1 3.5-.5 4.5 1.5-1-1-2.5-1.5-4.5-.5zM12 13V9",
   screen: "M4 16h16M5 16v3M19 16v3M6 10h12v6H6zM8 8h8",
+  custom: "M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 3v18M4 7.5l8 4.5 8-4.5",
 };
 
 export function KindIcon({ kind, size = 18 }: { kind: BuilderKind; size?: number }) {

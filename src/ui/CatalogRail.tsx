@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion } from "motion/react";
-import { CaretLeft, ListBullets, Plus } from "@phosphor-icons/react";
+import { CaretLeft, ListBullets, Plus, Trash } from "@phosphor-icons/react";
 import { CATALOG } from "../catalog/catalog";
-import type { Category, Product } from "../state/types";
+import type { Category, CustomShape, Product } from "../state/types";
 import { useStore } from "../state/store";
 import { formatFootprint, formatPrice } from "../lib/units";
 import { KindIcon } from "./KindIcon";
@@ -14,7 +15,15 @@ const LABEL: Record<Category, string> = {
   storage: "Storage",
   lighting: "Lighting",
   decor: "Decor",
+  custom: "Custom",
 };
+
+const SHAPES: { id: CustomShape; label: string }[] = [
+  { id: "box", label: "Box" },
+  { id: "cylinder", label: "Column" },
+  { id: "panel", label: "Panel" },
+  { id: "platform", label: "Platform" },
+];
 
 const spring = { type: "spring", stiffness: 320, damping: 30 } as const;
 
@@ -89,8 +98,146 @@ export function CatalogRail({ open, onToggle }: Props) {
             </ul>
           </section>
         ))}
+
+        <CustomSection unitSystem={unitSystem} />
       </div>
     </div>
+  );
+}
+
+function CustomSection({ unitSystem }: { unitSystem: "metric" | "imperial" }) {
+  const customProducts = useStore((s) => s.customProducts);
+  const createCustom = useStore((s) => s.createCustom);
+  const addPlacement = useStore((s) => s.addPlacement);
+  const removeCustom = useStore((s) => s.removeCustom);
+  const [open, setOpen] = useState(false);
+  const [shape, setShape] = useState<CustomShape>("box");
+  const [w, setW] = useState(1);
+  const [d, setD] = useState(0.6);
+  const [h, setH] = useState(1);
+  const [color, setColor] = useState("#8a6a49");
+
+  const create = () => {
+    const res = createCustom({ shape, width: w, depth: d, height: h, color });
+    if (res.ok && res.productId) addPlacement(res.productId);
+    setOpen(false);
+  };
+
+  return (
+    <section className="border-t border-border">
+      <div className="flex items-center justify-between px-4 pb-1 pt-3">
+        <h2 className="section-label">Custom</h2>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="rounded-md border border-border px-2 py-0.5 text-[11px] text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+        >
+          {open ? "Close" : "+ New piece"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mx-3 mb-2 flex flex-col gap-2 rounded-md border border-border bg-surface-sunk p-3">
+          <div className="flex flex-wrap gap-1">
+            {SHAPES.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setShape(s.id)}
+                className={`rounded border px-2 py-0.5 text-[11px] ${
+                  shape === s.id
+                    ? "border-accent bg-accent-sunk text-text"
+                    : "border-border bg-surface text-text-muted"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className={`grid gap-1.5 ${shape === "cylinder" ? "grid-cols-3" : "grid-cols-3"}`}>
+            <MiniField label="W" value={w} onChange={setW} />
+            {shape !== "cylinder" && <MiniField label="D" value={d} onChange={setD} />}
+            <MiniField label="H" value={h} onChange={setH} />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="h-7 w-9 cursor-pointer rounded border border-border bg-surface"
+            />
+            <button
+              onClick={create}
+              className="flex-1 rounded-md bg-text py-1.5 text-[12px] font-medium text-surface transition-colors hover:bg-[#3a3a37]"
+            >
+              Create &amp; place
+            </button>
+          </div>
+        </div>
+      )}
+
+      {customProducts.length === 0 ? (
+        <p className="px-4 pb-3 text-[12px] text-text-muted">
+          Build a box, column, panel, or platform at any size.
+        </p>
+      ) : (
+        <ul className="pb-2">
+          {customProducts.map((p) => (
+            <li key={p.id} className="flex items-center gap-2 px-4 py-1.5">
+              <span
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border text-text-muted"
+                style={{
+                  boxShadow: "var(--shadow-chip)",
+                  background: `linear-gradient(150deg, #ffffff, ${p.variants[0].color}22)`,
+                }}
+              >
+                <KindIcon kind="custom" size={16} />
+              </span>
+              <button
+                onClick={() => addPlacement(p.id)}
+                className="min-w-0 flex-1 text-left"
+                title="place another"
+              >
+                <span className="block truncate text-[13px] text-text">{p.name}</span>
+                <span className="tabular block text-[11px] text-text-muted">
+                  {formatFootprint(p.dims.w, p.dims.d, unitSystem)}
+                </span>
+              </button>
+              <button
+                onClick={() => removeCustom(p.id)}
+                className="text-text-muted transition-colors hover:text-bad-fg"
+                aria-label="delete custom piece"
+              >
+                <Trash size={13} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function MiniField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-0.5">
+      <span className="text-[10px] uppercase tracking-wide text-text-muted">{label}</span>
+      <input
+        type="number"
+        step={0.1}
+        value={value}
+        min={0.1}
+        max={8}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="tabular w-full rounded border border-border bg-surface px-1 py-1 text-[12px] outline-none"
+      />
+    </label>
   );
 }
 

@@ -3,6 +3,7 @@ import { useWebMCPTools } from "./webmcp/register";
 import { ROOMWRIGHT_TOOLS } from "./webmcp/tools";
 import { useStore } from "./state/store";
 import { loadSaved, startAutosave } from "./state/persistence";
+import { layoutFromUrl } from "./lib/share";
 import { SceneCanvas } from "./scene/SceneCanvas";
 import { TopBar } from "./ui/TopBar";
 import { CatalogRail } from "./ui/CatalogRail";
@@ -25,7 +26,8 @@ export function App() {
   const [inspectorOpen, setInspectorOpen] = useState(() => !isNarrow());
 
   useEffect(() => {
-    const saved = loadSaved();
+    const shared = layoutFromUrl();
+    const saved = shared ?? loadSaved();
     if (saved) useStore.getState().hydrate(saved);
     return startAutosave();
   }, []);

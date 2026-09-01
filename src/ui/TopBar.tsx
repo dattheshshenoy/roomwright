@@ -10,12 +10,14 @@ import {
   Export,
   GridFour,
   Image,
+  LinkSimple,
   UploadSimple,
 } from "@phosphor-icons/react";
 import { useStore } from "../state/store";
 import { exportJSON, parseImport } from "../state/persistence";
 import { computeShoppingList } from "../state/selectors";
 import { canvasPNG, downloadFile } from "../lib/download";
+import { shareLink } from "../lib/share";
 import { formatPrice } from "../lib/units";
 import { ToolsBadge } from "./ToolsBadge";
 import { Popover } from "./primitives/Popover";
@@ -141,6 +143,11 @@ export function TopBar() {
           )}
         >
           <div className="p-1">
+            <MenuItem
+              icon={<LinkSimple size={14} />}
+              label="Copy share link"
+              onClick={() => void navigator.clipboard?.writeText(shareLink())}
+            />
             <MenuItem icon={<Image size={14} />} label="Save image (PNG)" onClick={saveImage} />
             <MenuItem
               icon={<DownloadSimple size={14} />}

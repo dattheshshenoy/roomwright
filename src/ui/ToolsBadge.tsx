@@ -6,6 +6,7 @@ import {
   CaretDown,
   CheckCircle,
   Copy,
+  Cube,
   DoorOpen,
   Eye,
   ListBullets,
@@ -63,6 +64,11 @@ const GROUPS: ToolGroup[] = [
         name: "add_item",
         blurb: "put a piece in the room, auto- or exactly positioned",
         icon: <Plus size={14} />,
+      },
+      {
+        name: "create_custom_item",
+        blurb: "make a box, column, panel or platform at any size and place it",
+        icon: <Cube size={14} />,
       },
       {
         name: "duplicate_item",

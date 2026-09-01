@@ -36,9 +36,13 @@ export type BuilderKind =
   | "lamp"
   | "shelf"
   | "plant"
-  | "screen";
+  | "screen"
+  | "custom";
 
-export type Category = "seating" | "tables" | "sleeping" | "storage" | "lighting" | "decor";
+export type CustomShape = "box" | "cylinder" | "panel" | "platform";
+
+export type Category =
+  "seating" | "tables" | "sleeping" | "storage" | "lighting" | "decor" | "custom";
 
 export interface Variant {
   id: string;
@@ -63,6 +67,10 @@ export interface Product {
   clearance: { front?: number; sides?: number; back?: number };
   /** true for pieces that sit flush to a wall by default (sofa, shelf, bed) */
   wallHugging: boolean;
+  /** only for kind === "custom" — which primitive to render */
+  shape?: CustomShape;
+  /** true for user-created pieces (persisted separately, editable) */
+  custom?: boolean;
 }
 
 export interface Placement {

@@ -130,7 +130,8 @@ const listCatalog = defineTool(
     }),
   }),
   (args: { category?: Category }) => {
-    const items = CATALOG.filter((p) => !args.category || p.category === args.category);
+    const all = [...CATALOG, ...useStore.getState().customProducts];
+    const items = all.filter((p) => !args.category || p.category === args.category);
     return {
       ok: true,
       summary: `${items.length} product(s)${args.category ? ` in ${args.category}` : ""}.`,
@@ -138,11 +139,70 @@ const listCatalog = defineTool(
         product_id: p.id,
         name: p.name,
         category: p.category,
+        custom: p.custom ?? false,
         dims_m: p.dims,
         price_usd: p.price,
         clearance_front_m: p.clearance.front ?? 0,
         variants: p.variants.map((v) => ({ id: v.id, name: v.name })),
       })),
+    };
+  },
+);
+
+/** create_custom_item */
+const createCustomItem = defineTool(
+  "roomwright_create_custom_item",
+  "Make a custom piece from a primitive and place it in the room. shape is box (cabinet, built-in, block), cylinder (column, round pouffe), panel (a thin room divider), or platform (a low step or podium). width/depth/height in metres (cylinder ignores depth). Optional name, hex colour, position and rotation. Returns the new product_id and placement_id.",
+  obj(
+    {
+      shape: str("primitive", { enum: ["box", "cylinder", "panel", "platform"] }),
+      width: num("metres"),
+      depth: num("metres (ignored for cylinder)"),
+      height: num("metres"),
+      name: str("optional label"),
+      color: str("optional hex, e.g. #8a6a49"),
+      x: num("centre x, metres"),
+      z: num("centre z, metres"),
+      rotation_degrees: num("clockwise from facing +z"),
+    },
+    ["shape", "width", "depth", "height"],
+  ),
+  (args: {
+    shape: "box" | "cylinder" | "panel" | "platform";
+    width: number;
+    depth: number;
+    height: number;
+    name?: string;
+    color?: string;
+    x?: number;
+    z?: number;
+    rotation_degrees?: number;
+  }) => {
+    const made = useStore.getState().createCustom({
+      shape: args.shape,
+      name: args.name,
+      width: args.width,
+      depth: args.depth,
+      height: args.height,
+      color: args.color,
+    });
+    if (!made.ok || !made.productId) return { ok: false, summary: "could not create custom piece" };
+
+    const res = useStore.getState().addPlacement(made.productId, {
+      x: args.x,
+      z: args.z,
+      rotationY: args.rotation_degrees != null ? RAD(args.rotation_degrees) : undefined,
+    });
+    if (!res.ok || !res.placementId) return { ok: false, summary: res.reason ?? "placed nothing" };
+    const p = useStore.getState().placements.find((x) => x.id === res.placementId)!;
+    return {
+      ok: true,
+      summary: `Created and placed a custom ${args.shape} at (${M2(p.x)}, ${M2(p.z)}) m.`,
+      payload: {
+        product_id: made.productId,
+        placement: describePlacement(p),
+        issues: issuesFor(res.placementId),
+      },
     };
   },
 );
@@ -480,6 +540,7 @@ export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   getRoom,
   listCatalog,
   addItem,
+  createCustomItem,
   moveItem,
   rotateItem,
   resizeItem,

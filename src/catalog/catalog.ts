@@ -184,6 +184,23 @@ export const CATALOG: Product[] = [
 
 export const CATALOG_BY_ID = new Map(CATALOG.map((p) => [p.id, p]));
 
+/** User-created pieces live here, kept in sync with the store by
+ *  `state/customProducts.ts` and rehydrated from a saved layout. */
+const CUSTOM = new Map<string, Product>();
+
+export function registerCustomProduct(p: Product): void {
+  CUSTOM.set(p.id, p);
+}
+export function unregisterCustomProduct(id: string): void {
+  CUSTOM.delete(id);
+}
+export function clearCustomProducts(): void {
+  CUSTOM.clear();
+}
+export function listCustomProducts(): Product[] {
+  return [...CUSTOM.values()];
+}
+
 export function getProduct(id: string): Product | undefined {
-  return CATALOG_BY_ID.get(id);
+  return CATALOG_BY_ID.get(id) ?? CUSTOM.get(id);
 }

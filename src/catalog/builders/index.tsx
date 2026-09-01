@@ -289,6 +289,30 @@ function plant({ product, variant }: BuildArgs) {
   );
 }
 
+function custom({ product, variant }: BuildArgs) {
+  const { w, d, h } = product.dims;
+  const m = finishMaterial(variant);
+  switch (product.shape ?? "box") {
+    case "cylinder": {
+      const r = Math.min(w, d) / 2;
+      return <Cyl r={r} h={h} pos={[0, h / 2, 0]} mat={m} />;
+    }
+    case "panel":
+      return <Box size={[w, h, Math.min(d, 0.08)]} pos={[0, h / 2, 0]} mat={m} radius={0.01} />;
+    case "platform":
+      return (
+        <Box
+          size={[w, Math.min(h, 0.3), d]}
+          pos={[0, Math.min(h, 0.3) / 2, 0]}
+          mat={m}
+          radius={0.03}
+        />
+      );
+    default:
+      return <Box size={[w, h, d]} pos={[0, h / 2, 0]} mat={m} radius={0.03} />;
+  }
+}
+
 function shade(hex: string, factor: number): string {
   const n = parseInt(hex.slice(1), 16);
   const r = Math.min(255, Math.round(((n >> 16) & 255) * factor));
@@ -310,6 +334,7 @@ const FURNITURE_BUILDERS: Record<BuilderKind, (a: BuildArgs) => ReactNode> = {
   shelf: (a) => shelf(a),
   plant: (a) => plant(a),
   screen: (a) => media(a),
+  custom: (a) => custom(a),
 };
 
 export function FurniturePiece({ product, variant }: BuildArgs) {

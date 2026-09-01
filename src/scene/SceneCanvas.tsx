@@ -1,5 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
+import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { useStore } from "../state/store";
 import { roomCenter, roomRadius } from "./geometry";
@@ -8,7 +9,8 @@ import { Furniture } from "./Furniture";
 import { Controls } from "./Controls";
 
 /** The 3D stage. Synthetic image-based lighting (no HDRI file), one warm key
- *  light standing in for a window, soft contact shadows to ground everything. */
+ *  light standing in for a window, soft contact shadows to ground everything,
+ *  and a restrained post pass (edge AA, a whisper of bloom, a soft vignette). */
 export function SceneCanvas() {
   const room = useStore((s) => s.room);
   const center = roomCenter(room);
@@ -87,6 +89,12 @@ export function SceneCanvas() {
       />
 
       <Controls center={center} radius={radius} />
+
+      <EffectComposer enableNormalPass={false} multisampling={0}>
+        <Bloom intensity={0.06} luminanceThreshold={0.9} luminanceSmoothing={0.4} mipmapBlur />
+        <Vignette offset={0.35} darkness={0.34} eskil={false} />
+        <SMAA />
+      </EffectComposer>
     </Canvas>
   );
 }

@@ -9,8 +9,15 @@ import type {
   WallSide,
 } from "./types";
 import type { UnitSystem } from "../lib/units";
-import { getProduct } from "../catalog/catalog";
+import {
+  clearCustomProducts,
+  getProduct,
+  registerCustomProduct,
+  unregisterCustomProduct,
+} from "../catalog/catalog";
+import { makeCustomProduct, type CustomSpec } from "../catalog/customProducts";
 import { nid } from "../lib/id";
+import type { Product } from "./types";
 import { autoPosition, clampToRoom, snapAngle } from "../lib/geometry";
 
 const DEFAULT_ROOM: Room = {
@@ -44,6 +51,8 @@ interface MoveResult {
 export interface Store {
   room: Room;
   placements: Placement[];
+  /** user-defined primitive products; referenced by placements, persisted */
+  customProducts: Product[];
   selectedId: string | null;
   agentLog: AgentLogEntry[];
   view: ViewMode;
@@ -71,6 +80,12 @@ export interface Store {
     ok: boolean;
     outOfBounds: string[];
   };
+  createCustom: (spec: CustomSpec) => { ok: boolean; productId?: string };
+  updateCustom: (
+    productId: string,
+    patch: Partial<Pick<CustomSpec, "name" | "width" | "depth" | "height" | "color">>,
+  ) => { ok: boolean };
+  removeCustom: (productId: string) => { ok: boolean };
   addOpening: (kind: OpeningKind, wall: WallSide) => { ok: boolean; id?: string };
   updateOpening: (
     id: string,
@@ -88,7 +103,9 @@ export interface Store {
   redo: () => void;
   reset: () => void;
 
-  hydrate: (partial: Partial<Pick<Store, "room" | "placements" | "unitSystem">>) => void;
+  hydrate: (
+    partial: Partial<Pick<Store, "room" | "placements" | "unitSystem" | "customProducts">>,
+  ) => void;
 }
 
 const HISTORY_LIMIT = 50;
@@ -121,6 +138,7 @@ export const useStore = create<Store>((set, get) => {
   return {
     room: DEFAULT_ROOM,
     placements: [],
+    customProducts: [],
     selectedId: null,
     agentLog: [],
     view: "orbit",
@@ -128,6 +146,53 @@ export const useStore = create<Store>((set, get) => {
     dragging: false,
     past: [],
     future: [],
+
+    createCustom: (spec) => {
+      const product = makeCustomProduct(spec);
+      registerCustomProduct(product);
+      set((s) => ({ customProducts: [...s.customProducts, product] }));
+      return { ok: true, productId: product.id };
+    },
+
+    updateCustom: (productId, patch) => {
+      const cur = get().customProducts.find((p) => p.id === productId);
+      if (!cur) return { ok: false };
+      const next = makeCustomProduct({
+        shape: cur.shape ?? "box",
+        name: patch.name ?? cur.name,
+        width: patch.width ?? cur.dims.w,
+        depth: patch.depth ?? cur.dims.d,
+        height: patch.height ?? cur.dims.h,
+        color: patch.color ?? cur.variants[0].color,
+        wallHugging: cur.wallHugging,
+      });
+      const updated: Product = { ...next, id: productId };
+      registerCustomProduct(updated);
+      set((s) => ({
+        customProducts: s.customProducts.map((p) => (p.id === productId ? updated : p)),
+      }));
+      // re-clamp any placements of this product for the new footprint
+      const room = get().room;
+      commit({
+        placements: get().placements.map((p) => {
+          if (p.productId !== productId) return p;
+          const c = clampToRoom(p.x, p.z, p, updated, room);
+          return { ...p, x: c.x, z: c.z };
+        }),
+      });
+      return { ok: true };
+    },
+
+    removeCustom: (productId) => {
+      if (!get().customProducts.some((p) => p.id === productId)) return { ok: false };
+      unregisterCustomProduct(productId);
+      set((s) => ({ customProducts: s.customProducts.filter((p) => p.id !== productId) }));
+      commit({
+        placements: get().placements.filter((p) => p.productId !== productId),
+        selectedId: null,
+      });
+      return { ok: true };
+    },
 
     addPlacement: (productId, opts = {}) => {
       const product = getProduct(productId);
@@ -362,17 +427,26 @@ export const useStore = create<Store>((set, get) => {
         };
       }),
 
-    reset: () => commit({ room: DEFAULT_ROOM, placements: [], selectedId: null }),
+    reset: () => {
+      clearCustomProducts();
+      set({ customProducts: [] });
+      commit({ room: DEFAULT_ROOM, placements: [], selectedId: null });
+    },
 
-    hydrate: (partial) =>
+    hydrate: (partial) => {
+      const customs = partial.customProducts ?? get().customProducts;
+      clearCustomProducts();
+      for (const p of customs) registerCustomProduct(p);
       set({
         room: partial.room ?? get().room,
         placements: partial.placements ?? get().placements,
+        customProducts: customs,
         unitSystem: partial.unitSystem ?? get().unitSystem,
         past: [],
         future: [],
         selectedId: null,
-      }),
+      });
+    },
   };
 });
 
