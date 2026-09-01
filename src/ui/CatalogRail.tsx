@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Plus } from "@phosphor-icons/react";
+import { CaretLeft, ListBullets, Plus } from "@phosphor-icons/react";
 import { CATALOG } from "../catalog/catalog";
 import type { Category, Product } from "../state/types";
 import { useStore } from "../state/store";
@@ -18,9 +18,29 @@ const LABEL: Record<Category, string> = {
 
 const spring = { type: "spring", stiffness: 320, damping: 30 } as const;
 
-export function CatalogRail() {
+interface Props {
+  open: boolean;
+  onToggle: () => void;
+}
+
+export function CatalogRail({ open, onToggle }: Props) {
   const addPlacement = useStore((s) => s.addPlacement);
   const unitSystem = useStore((s) => s.unitSystem);
+
+  if (!open) {
+    return (
+      <button
+        onClick={onToggle}
+        title="Open catalogue"
+        className="flex h-full w-full flex-col items-center gap-3 pt-3 text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+      >
+        <ListBullets size={17} />
+        <span className="section-label" style={{ writingMode: "vertical-rl" }}>
+          Catalogue
+        </span>
+      </button>
+    );
+  }
 
   const groups = ORDER.map((cat) => ({
     cat,
@@ -30,12 +50,24 @@ export function CatalogRail() {
   let index = 0;
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-border px-4 py-3">
-        <p className="section-label">Catalogue</p>
-        <p className="mt-0.5 text-[13px] text-text-muted">
-          {CATALOG.length} pieces &middot; real dimensions
-        </p>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex items-start justify-between border-b border-border px-4 py-3">
+        <div>
+          <p className="section-label flex items-center gap-1.5">
+            <ListBullets size={13} />
+            Catalogue
+          </p>
+          <p className="mt-0.5 text-[13px] text-text-muted">
+            {CATALOG.length} pieces &middot; real dimensions
+          </p>
+        </div>
+        <button
+          onClick={onToggle}
+          title="Collapse catalogue"
+          className="-mr-1 grid h-6 w-6 place-items-center rounded-md text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+        >
+          <CaretLeft size={14} />
+        </button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -50,7 +82,7 @@ export function CatalogRail() {
                   key={p.id}
                   product={p}
                   unitSystem={unitSystem}
-                  delay={index++ * 0.018}
+                  delay={index++ * 0.016}
                   onAdd={() => addPlacement(p.id)}
                 />
               ))}
@@ -77,7 +109,7 @@ function CatalogItem({
     <motion.li
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
     >
       <motion.button
         onClick={onAdd}
@@ -87,7 +119,7 @@ function CatalogItem({
         className="group flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-surface-sunk"
       >
         <span
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border bg-surface text-text-muted transition-colors group-hover:text-text"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border text-text-muted transition-colors group-hover:text-text"
           style={{
             boxShadow: "var(--shadow-chip)",
             background: `linear-gradient(150deg, #ffffff, ${product.variants[0].color}22)`,
@@ -102,10 +134,7 @@ function CatalogItem({
             {formatPrice(product.price)}
           </span>
         </span>
-        <span
-          className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-text-muted opacity-0 transition-opacity group-hover:opacity-100"
-          style={{ background: "var(--color-surface-sunk)" }}
-        >
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-surface-sunk text-text-muted opacity-0 transition-opacity group-hover:opacity-100">
           <Plus size={13} weight="bold" />
         </span>
       </motion.button>

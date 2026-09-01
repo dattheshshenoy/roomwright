@@ -158,10 +158,16 @@ export const useStore = create<Store>((set, get) => {
 
     rotatePlacement: (id, radians, absolute = false) => {
       const target = get().placements.find((p) => p.id === id);
-      if (!target) return { ok: false };
-      const next = snapAngle(absolute ? radians : target.rotationY + radians);
+      const product = target && getProduct(target.productId);
+      if (!target || !product) return { ok: false };
+      const rotationY = snapAngle(absolute ? radians : target.rotationY + radians);
+      // the rotated footprint has a different extent — pull it back inside the room
+      const rotated: Placement = { ...target, rotationY };
+      const c = clampToRoom(target.x, target.z, rotated, product, get().room);
       commit({
-        placements: get().placements.map((p) => (p.id === id ? { ...p, rotationY: next } : p)),
+        placements: get().placements.map((p) =>
+          p.id === id ? { ...p, rotationY, x: c.x, z: c.z } : p,
+        ),
       });
       return { ok: true };
     },

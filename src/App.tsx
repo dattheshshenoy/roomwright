@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useWebMCPTools } from "./webmcp/register";
 import { ROOMWRIGHT_TOOLS } from "./webmcp/tools";
 import { useStore } from "./state/store";
@@ -18,6 +18,7 @@ const DEBUG =
 export function App() {
   useWebMCPTools(ROOMWRIGHT_TOOLS);
   useShortcuts();
+  const [railOpen, setRailOpen] = useState(true);
 
   useEffect(() => {
     const saved = loadSaved();
@@ -26,25 +27,28 @@ export function App() {
   }, []);
 
   return (
-    <div className="grain grid h-full grid-rows-[3.25rem_1fr] bg-bg text-text">
+    <div className="grain grid h-full grid-rows-[3.25rem_1fr] overflow-hidden bg-bg text-text">
       <TopBar />
 
-      <div className="grid grid-cols-[20rem_1fr_20rem] overflow-hidden">
+      <div
+        className="grid min-h-0 overflow-hidden transition-[grid-template-columns] duration-200"
+        style={{ gridTemplateColumns: `${railOpen ? "19rem" : "3rem"} 1fr 20rem` }}
+      >
         <aside
-          className="relative z-10 border-r border-border bg-surface"
+          className="relative z-10 flex min-h-0 flex-col overflow-hidden border-r border-border bg-surface"
           style={{ boxShadow: "1px 0 0 rgba(42,40,36,0.02), 8px 0 24px -16px rgba(42,40,36,0.1)" }}
         >
-          <CatalogRail />
+          <CatalogRail open={railOpen} onToggle={() => setRailOpen((v) => !v)} />
         </aside>
 
-        <main className="relative bg-surface-sunk">
+        <main className="relative min-h-0 bg-surface-sunk">
           <SceneCanvas />
           <EmptyRoom />
           <LayoutStatus />
         </main>
 
         <aside
-          className="relative z-10"
+          className="relative z-10 min-h-0"
           style={{
             boxShadow: "-1px 0 0 rgba(42,40,36,0.02), -8px 0 24px -16px rgba(42,40,36,0.1)",
           }}

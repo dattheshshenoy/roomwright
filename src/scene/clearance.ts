@@ -5,8 +5,11 @@ import { aabbOverlap, footprintAABB, frontDir, type AABB } from "../lib/geometry
 const WALKWAY_MIN = 0.75; // metres
 const OPENING_ACCESS = 0.85; // clear depth an opening needs in front of it
 
+/** Rugs are meant to sit under other pieces, so they're excluded from collision
+ *  and clearance checks. Everything else — lamps and plants included — occupies
+ *  real floor space. */
 function solidsOnly(resolved: ResolvedPlacement[]): ResolvedPlacement[] {
-  return resolved.filter((r) => r.product.kind !== "rug" && r.product.kind !== "lamp");
+  return resolved.filter((r) => r.product.kind !== "rug");
 }
 
 /** Fast collision-only pass for per-frame rendering feedback. */

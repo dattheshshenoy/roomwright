@@ -100,18 +100,31 @@ function PieceInspector() {
         </div>
 
         <Field label="Rotation">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => rotatePlacement(placement.id, -Math.PI / 12)}
-            >
-              &minus;15&deg;
-            </Button>
-            <span className="tabular flex-1 text-center text-[13px]">{rotationDeg}&deg;</span>
-            <Button variant="secondary" onClick={() => rotatePlacement(placement.id, Math.PI / 12)}>
-              +15&deg;
-            </Button>
+          <div className="flex items-center gap-3">
+            <Dial degrees={rotationDeg} />
+            <div className="flex flex-1 items-center gap-1.5">
+              <button
+                onClick={() => rotatePlacement(placement.id, -Math.PI / 12)}
+                className="grid h-8 flex-1 place-items-center rounded-md border border-border bg-surface text-[13px] transition-colors hover:bg-surface-sunk active:scale-95"
+                aria-label="rotate left 15 degrees"
+              >
+                &minus;15&deg;
+              </button>
+              <span className="tabular w-12 text-center text-[13px] text-text">
+                {rotationDeg}&deg;
+              </span>
+              <button
+                onClick={() => rotatePlacement(placement.id, Math.PI / 12)}
+                className="grid h-8 flex-1 place-items-center rounded-md border border-border bg-surface text-[13px] transition-colors hover:bg-surface-sunk active:scale-95"
+                aria-label="rotate right 15 degrees"
+              >
+                +15&deg;
+              </button>
+            </div>
           </div>
+          <p className="mt-1 text-[11px] text-text-muted">
+            Or drag the handle on the piece in the 3D view.
+          </p>
         </Field>
 
         {issues.length > 0 && (
@@ -135,6 +148,32 @@ function PieceInspector() {
         </Button>
       </div>
     </div>
+  );
+}
+
+/** Compass-style readout of a piece's heading. */
+function Dial({ degrees }: { degrees: number }) {
+  const rad = (degrees * Math.PI) / 180;
+  return (
+    <svg width="34" height="34" viewBox="0 0 34 34" className="shrink-0">
+      <circle
+        cx="17"
+        cy="17"
+        r="14"
+        fill="var(--color-surface-sunk)"
+        stroke="var(--color-border)"
+      />
+      <line
+        x1="17"
+        y1="17"
+        x2={17 + Math.sin(rad) * 11}
+        y2={17 - Math.cos(rad) * 11}
+        stroke="var(--color-accent)"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="17" cy="17" r="1.8" fill="var(--color-accent)" />
+    </svg>
   );
 }
 
