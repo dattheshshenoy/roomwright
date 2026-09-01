@@ -40,6 +40,9 @@ export interface Store {
   agentLog: AgentLogEntry[];
   view: ViewMode;
   unitSystem: UnitSystem;
+  /** true while the user is dragging a piece — the camera is frozen so the room
+   *  does not move under the pointer */
+  dragging: boolean;
 
   past: Snapshot[];
   future: Snapshot[];
@@ -60,6 +63,7 @@ export interface Store {
   select: (id: string | null) => void;
   setView: (v: ViewMode) => void;
   setUnitSystem: (u: UnitSystem) => void;
+  setDragging: (v: boolean) => void;
   pushLog: (entry: Omit<AgentLogEntry, "id" | "ts">) => void;
 
   undo: () => void;
@@ -103,6 +107,7 @@ export const useStore = create<Store>((set, get) => {
     agentLog: [],
     view: "orbit",
     unitSystem: "metric",
+    dragging: false,
     past: [],
     future: [],
 
@@ -204,6 +209,7 @@ export const useStore = create<Store>((set, get) => {
     select: (id) => set({ selectedId: id }),
     setView: (view) => set({ view }),
     setUnitSystem: (unitSystem) => set({ unitSystem }),
+    setDragging: (dragging) => set({ dragging }),
 
     pushLog: (entry) =>
       set((s) => ({

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 interface Props {
   trigger: (open: boolean) => ReactNode;
@@ -32,16 +33,22 @@ export function Popover({ trigger, children, align = "right", width = 340 }: Pro
       <button type="button" onClick={() => setOpen((v) => !v)}>
         {trigger(open)}
       </button>
-      {open && (
-        <div
-          className={`animate-rise absolute top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-lg border border-border bg-surface shadow-[0_10px_28px_-10px_rgba(42,42,40,0.14)] ${
-            align === "right" ? "right-0" : "left-0"
-          }`}
-          style={{ width }}
-        >
-          {children}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            style={{ width, boxShadow: "var(--shadow-pop)", transformOrigin: "top right" }}
+            className={`absolute top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-lg border border-border bg-surface ${
+              align === "right" ? "right-0" : "left-0"
+            }`}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

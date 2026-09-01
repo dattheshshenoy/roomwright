@@ -17,6 +17,7 @@ export function Controls({ center, radius }: Props) {
   const controls = useRef<OrbitControlsImpl>(null);
   const camera = useThree((s) => s.camera);
   const view = useStore((s) => s.view);
+  const dragging = useStore((s) => s.dragging);
   const target = new THREE.Vector3(...center);
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export function Controls({ center, radius }: Props) {
     <OrbitControls
       ref={controls}
       makeDefault
+      enabled={!dragging}
       enablePan
       enableDamping
       dampingFactor={0.08}

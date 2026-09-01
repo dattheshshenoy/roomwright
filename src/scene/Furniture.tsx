@@ -29,8 +29,11 @@ export function Furniture({ roomWidth, roomLength }: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const grab = useRef<{ dx: number; dz: number }>({ dx: 0, dz: 0 });
 
+  const setDragging = useStore((s) => s.setDragging);
+
   const endDrag = () => {
     setDragId(null);
+    setDragging(false);
     setCursor("auto");
   };
 
@@ -40,6 +43,7 @@ export function Furniture({ roomWidth, roomLength }: Props) {
     select(id);
     grab.current = { dx: p.x - e.point.x, dz: p.z - e.point.z };
     setDragId(id);
+    setDragging(true);
     setCursor("grabbing");
     window.addEventListener("pointerup", endDrag, { once: true });
   };

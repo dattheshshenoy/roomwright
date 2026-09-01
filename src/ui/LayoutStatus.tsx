@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "motion/react";
 import { CheckCircle, Warning, WarningOctagon } from "@phosphor-icons/react";
 import { useStore } from "../state/store";
 import { useLayoutReport } from "../state/useLayoutReport";
@@ -9,8 +10,6 @@ export function LayoutStatus() {
   const count = useStore((s) => s.placements.length);
   const unitSystem = useStore((s) => s.unitSystem);
   const report = useLayoutReport();
-
-  if (count === 0) return null;
 
   const conflicts = report.issues.filter((i) => i.status === "bad").length;
   const tight = report.issues.filter((i) => i.status === "warn").length;
@@ -36,16 +35,25 @@ export function LayoutStatus() {
           .join(" · ");
 
   return (
-    <div
-      className={`animate-rise pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-md border px-3 py-1.5 text-[13px] ${tone}`}
-    >
-      <Icon size={15} weight="fill" />
-      <span>{label}</span>
-      {report.narrowestWalkway !== null && (
-        <span className="tabular opacity-70">
-          &middot; narrowest gap {formatLength(report.narrowestWalkway, unitSystem)}
-        </span>
+    <AnimatePresence>
+      {count > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 12, x: "-50%" }}
+          animate={{ opacity: 1, y: 0, x: "-50%" }}
+          exit={{ opacity: 0, y: 12, x: "-50%" }}
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          style={{ boxShadow: "var(--shadow-panel)" }}
+          className={`pointer-events-none absolute bottom-4 left-1/2 flex items-center gap-2 rounded-md border px-3 py-1.5 text-[13px] ${tone}`}
+        >
+          <Icon size={15} weight="fill" />
+          <motion.span key={label}>{label}</motion.span>
+          {report.narrowestWalkway !== null && (
+            <span className="tabular opacity-70">
+              &middot; narrowest gap {formatLength(report.narrowestWalkway, unitSystem)}
+            </span>
+          )}
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 }

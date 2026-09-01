@@ -26,11 +26,14 @@ export function App() {
   }, []);
 
   return (
-    <div className="grid h-full grid-rows-[3.25rem_1fr] bg-bg text-text">
+    <div className="grain grid h-full grid-rows-[3.25rem_1fr] bg-bg text-text">
       <TopBar />
 
       <div className="grid grid-cols-[20rem_1fr_20rem] overflow-hidden">
-        <aside className="border-r border-border bg-surface">
+        <aside
+          className="relative z-10 border-r border-border bg-surface"
+          style={{ boxShadow: "1px 0 0 rgba(42,40,36,0.02), 8px 0 24px -16px rgba(42,40,36,0.1)" }}
+        >
           <CatalogRail />
         </aside>
 
@@ -40,7 +43,14 @@ export function App() {
           <LayoutStatus />
         </main>
 
-        {DEBUG ? <DebugPanel /> : <Inspector />}
+        <aside
+          className="relative z-10"
+          style={{
+            boxShadow: "-1px 0 0 rgba(42,40,36,0.02), -8px 0 24px -16px rgba(42,40,36,0.1)",
+          }}
+        >
+          {DEBUG ? <DebugPanel /> : <Inspector />}
+        </aside>
       </div>
     </div>
   );

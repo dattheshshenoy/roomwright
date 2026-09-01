@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { motion } from "motion/react";
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
@@ -46,11 +47,33 @@ export function TopBar() {
   };
 
   return (
-    <header className="flex items-center justify-between border-b border-border bg-surface px-4">
+    <header
+      className="relative z-20 flex items-center justify-between border-b border-border bg-surface px-4"
+      style={{ boxShadow: "0 1px 0 rgba(42,40,36,0.03), 0 6px 16px -12px rgba(42,40,36,0.14)" }}
+    >
       <div className="flex items-center gap-3">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-2">
+          <span
+            className="grid h-6 w-6 place-items-center rounded-[7px] text-surface"
+            style={{ background: "var(--color-text)", boxShadow: "var(--shadow-chip)" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M5 20V10l7-5 7 5v10"
+                stroke="var(--color-accent)"
+                strokeWidth="2.2"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M5 20h14"
+                stroke="var(--color-surface)"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
           <span className="text-[15px] font-semibold tracking-tight">Roomwright</span>
-          <span className="section-label">room planner</span>
+          <span className="section-label hidden sm:inline">room planner</span>
         </div>
         <ToolsBadge />
       </div>
@@ -119,17 +142,23 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex overflow-hidden rounded-md border border-border">
+    <div className="relative flex rounded-md border border-border bg-surface-sunk p-0.5">
       {options.map((o) => (
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-[12px] transition-colors ${
-            value === o.value
-              ? "bg-surface-sunk text-text"
-              : "bg-surface text-text-muted hover:text-text"
+          className={`relative z-10 flex items-center gap-1.5 rounded-[5px] px-2.5 py-[3px] text-[12px] transition-colors ${
+            value === o.value ? "text-text" : "text-text-muted hover:text-text"
           }`}
         >
+          {value === o.value && (
+            <motion.span
+              layoutId={`seg-${options.map((x) => x.value).join()}`}
+              className="absolute inset-0 -z-10 rounded-[5px] border border-border bg-surface"
+              style={{ boxShadow: "0 1px 2px rgba(42,40,36,0.06)" }}
+              transition={{ type: "spring", stiffness: 480, damping: 34 }}
+            />
+          )}
           {o.icon}
           {o.label}
         </button>

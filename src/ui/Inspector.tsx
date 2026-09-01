@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Trash } from "@phosphor-icons/react";
 import { useStore } from "../state/store";
 import { computeShoppingList, resolveSelected } from "../state/selectors";
@@ -17,7 +18,17 @@ export function Inspector() {
   return (
     <div className="grid h-full grid-rows-[1fr_auto] overflow-hidden border-l border-border bg-surface">
       <div className="min-h-0 overflow-y-auto">
-        {selected ? <PieceInspector /> : <RoomInspector />}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={selected ? selected.placement.id : "room"}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {selected ? <PieceInspector /> : <RoomInspector />}
+          </motion.div>
+        </AnimatePresence>
       </div>
       <AgentLog />
     </div>
@@ -42,7 +53,7 @@ function PieceInspector() {
   const rotationDeg = Math.round((placement.rotationY * 180) / Math.PI);
 
   return (
-    <div className="animate-rise flex flex-col">
+    <div className="flex flex-col">
       <div className="border-b border-border px-4 py-3">
         <p className="section-label">Selected piece</p>
         <p className="mt-0.5 text-[15px] text-text">{product.name}</p>
@@ -54,18 +65,22 @@ function PieceInspector() {
 
       <div className="flex flex-col gap-4 px-4 py-4">
         <Field label="Finish">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {product.variants.map((v) => (
-              <button
+              <motion.button
                 key={v.id}
                 title={v.name}
                 onClick={() => setVariant(placement.id, v.id)}
-                className={`h-7 w-7 rounded-[5px] border transition-transform ${
-                  v.id === variant.id
-                    ? "border-accent ring-2 ring-accent-sunk"
-                    : "border-border hover:scale-105"
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className={`h-8 w-8 rounded-md border ${
+                  v.id === variant.id ? "border-accent ring-2 ring-accent-sunk" : "border-border"
                 }`}
-                style={{ background: v.color }}
+                style={{
+                  background: `linear-gradient(150deg, ${v.color}, ${v.color}cc)`,
+                  boxShadow: "var(--shadow-chip)",
+                }}
               />
             ))}
           </div>
