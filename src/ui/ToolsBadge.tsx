@@ -6,12 +6,14 @@ import {
   CaretDown,
   CheckCircle,
   Copy,
+  DoorOpen,
   Eye,
   ListBullets,
   MapPin,
   PaintBrushBroad,
   Plus,
   Receipt,
+  Resize,
   Ruler,
   TrashSimple,
 } from "@phosphor-icons/react";
@@ -115,6 +117,23 @@ const GROUPS: ToolGroup[] = [
         blurb: "collisions, blocked doors, clearances, walkways",
         icon: <CheckCircle size={14} />,
       },
+    ],
+  },
+  {
+    label: "Doors & windows",
+    hint: "openings in the walls",
+    tools: [
+      {
+        name: "add_opening",
+        blurb: "add a door or window to a wall",
+        icon: <DoorOpen size={14} />,
+      },
+      {
+        name: "update_opening",
+        blurb: "move or resize an opening, or switch door/window",
+        icon: <Resize size={14} />,
+      },
+      { name: "remove_opening", blurb: "take an opening out", icon: <TrashSimple size={14} /> },
     ],
   },
 ];

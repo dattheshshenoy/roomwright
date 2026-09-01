@@ -1,5 +1,13 @@
 import { create } from "zustand";
-import type { AgentLogEntry, Placement, Room, ViewMode } from "./types";
+import type {
+  AgentLogEntry,
+  Opening,
+  OpeningKind,
+  Placement,
+  Room,
+  ViewMode,
+  WallSide,
+} from "./types";
 import type { UnitSystem } from "../lib/units";
 import { getProduct } from "../catalog/catalog";
 import { nid } from "../lib/id";
@@ -63,6 +71,12 @@ export interface Store {
     ok: boolean;
     outOfBounds: string[];
   };
+  addOpening: (kind: OpeningKind, wall: WallSide) => { ok: boolean; id?: string };
+  updateOpening: (
+    id: string,
+    patch: Partial<Pick<Opening, "kind" | "wall" | "offset" | "width" | "sill" | "height">>,
+  ) => { ok: boolean; reason?: string };
+  removeOpening: (id: string) => { ok: boolean };
 
   select: (id: string | null) => void;
   setView: (v: ViewMode) => void;
@@ -230,11 +244,25 @@ export const useStore = create<Store>((set, get) => {
 
     setRoomDimensions: (dims) => {
       const room = get().room;
+      const width = clampDim(dims.width ?? room.width);
+      const length = clampDim(dims.length ?? room.length);
+      const height = Math.max(2.2, Math.min(4.5, dims.height ?? room.height));
       const next: Room = {
         ...room,
-        width: clampDim(dims.width ?? room.width),
-        length: clampDim(dims.length ?? room.length),
-        height: Math.max(2.2, Math.min(4.5, dims.height ?? room.height)),
+        width,
+        length,
+        height,
+        openings: room.openings.map((o) => {
+          const len = o.wall === "north" || o.wall === "south" ? width : length;
+          const w = Math.min(o.width, Math.max(0.4, len - 0.2));
+          return {
+            ...o,
+            width: w,
+            offset: clamp(o.offset, 0, Math.max(0, len - w)),
+            sill: Math.min(o.sill, Math.max(0, height - 0.4)),
+            height: Math.min(o.height, height - Math.min(o.sill, height - 0.4)),
+          };
+        }),
       };
       const outOfBounds: string[] = [];
       const kept = resolved().map(({ placement, product }) => {
@@ -246,6 +274,53 @@ export const useStore = create<Store>((set, get) => {
       });
       commit({ room: next, placements: kept });
       return { ok: true, outOfBounds };
+    },
+
+    addOpening: (kind, wall) => {
+      const room = get().room;
+      const len = wallLength(room, wall);
+      const width = Math.min(kind === "door" ? 0.9 : 1.4, len - 0.4);
+      const o: Opening = {
+        id: nid(kind === "door" ? "door" : "win"),
+        kind,
+        wall,
+        offset: Math.max(0.2, (len - width) / 2),
+        width,
+        sill: kind === "door" ? 0 : 0.9,
+        height: kind === "door" ? 2.04 : 1.2,
+      };
+      commit({ room: { ...room, openings: [...room.openings, o] } });
+      return { ok: true, id: o.id };
+    },
+
+    updateOpening: (id, patch) => {
+      const room = get().room;
+      const cur = room.openings.find((o) => o.id === id);
+      if (!cur) return { ok: false, reason: "no such opening" };
+      const kind = patch.kind ?? cur.kind;
+      const wall = patch.wall ?? cur.wall;
+      const len = wallLength(room, wall);
+      const width = clamp(patch.width ?? cur.width, 0.4, len - 0.2);
+      const offset = clamp(patch.offset ?? cur.offset, 0, Math.max(0, len - width));
+      const sill =
+        kind === "door" ? 0 : clamp(patch.sill ?? (cur.sill || 0.9), 0, room.height - 0.4);
+      const height = clamp(
+        patch.height ?? cur.height,
+        kind === "door" ? 1.6 : 0.4,
+        room.height - sill,
+      );
+      const nextO: Opening = { ...cur, kind, wall, width, offset, sill, height };
+      commit({
+        room: { ...room, openings: room.openings.map((o) => (o.id === id ? nextO : o)) },
+      });
+      return { ok: true };
+    },
+
+    removeOpening: (id) => {
+      const room = get().room;
+      if (!room.openings.some((o) => o.id === id)) return { ok: false };
+      commit({ room: { ...room, openings: room.openings.filter((o) => o.id !== id) } });
+      return { ok: true };
     },
 
     select: (id) => set({ selectedId: id }),
@@ -303,4 +378,15 @@ export const useStore = create<Store>((set, get) => {
 
 function clampDim(v: number): number {
   return Math.max(1.5, Math.min(20, Number.isFinite(v) ? v : 4));
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  if (!Number.isFinite(v)) return lo;
+  if (hi < lo) return lo;
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/** the run of a given wall — north/south span the width, east/west the length */
+function wallLength(room: Room, wall: WallSide): number {
+  return wall === "north" || wall === "south" ? room.width : room.length;
 }

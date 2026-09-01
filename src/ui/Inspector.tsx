@@ -240,6 +240,123 @@ function Dial({ degrees }: { degrees: number }) {
   );
 }
 
+const WALLS = ["north", "south", "east", "west"] as const;
+
+function OpeningsSection() {
+  const room = useStore((s) => s.room);
+  const unitSystem = useStore((s) => s.unitSystem);
+  const addOpening = useStore((s) => s.addOpening);
+  const updateOpening = useStore((s) => s.updateOpening);
+  const removeOpening = useStore((s) => s.removeOpening);
+
+  return (
+    <div className="border-t border-border px-4 py-3">
+      <div className="flex items-center justify-between">
+        <p className="section-label">Doors &amp; windows</p>
+        <div className="flex gap-1">
+          <button
+            onClick={() => addOpening("door", "south")}
+            className="rounded-md border border-border px-2 py-0.5 text-[11px] text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+          >
+            + Door
+          </button>
+          <button
+            onClick={() => addOpening("window", "north")}
+            className="rounded-md border border-border px-2 py-0.5 text-[11px] text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+          >
+            + Window
+          </button>
+        </div>
+      </div>
+
+      {room.openings.length === 0 ? (
+        <p className="mt-1 text-[13px] text-text-muted">No openings — solid walls.</p>
+      ) : (
+        <ul className="mt-2 flex flex-col gap-2">
+          {room.openings.map((o) => (
+            <li key={o.id} className="rounded-md border border-border bg-surface-sunk p-2">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() =>
+                    updateOpening(o.id, { kind: o.kind === "door" ? "window" : "door" })
+                  }
+                  className="tabular rounded border border-border bg-surface px-1.5 py-0.5 text-[11px] text-text capitalize"
+                  title="switch door / window"
+                >
+                  {o.kind}
+                </button>
+                <button
+                  onClick={() => removeOpening(o.id)}
+                  className="text-text-muted transition-colors hover:text-bad-fg"
+                  aria-label="remove opening"
+                >
+                  <Trash size={13} />
+                </button>
+              </div>
+              <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[10px] uppercase tracking-wide text-text-muted">Wall</span>
+                  <select
+                    value={o.wall}
+                    onChange={(e) => updateOpening(o.id, { wall: e.target.value as WallChoice })}
+                    className="tabular rounded border border-border bg-surface px-1 py-1 text-[12px] capitalize"
+                  >
+                    {WALLS.map((w) => (
+                      <option key={w} value={w}>
+                        {w}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <MiniNumber
+                  label="Offset"
+                  value={o.offset}
+                  onCommit={(v) => updateOpening(o.id, { offset: v })}
+                />
+                <MiniNumber
+                  label="Width"
+                  value={o.width}
+                  onCommit={(v) => updateOpening(o.id, { width: v })}
+                />
+              </div>
+              <p className="tabular mt-1 text-[10px] text-text-muted">
+                {formatLength(o.width, unitSystem)} wide on the {o.wall} wall
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+type WallChoice = (typeof WALLS)[number];
+
+function MiniNumber({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string;
+  value: number;
+  onCommit: (v: number) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-0.5">
+      <span className="text-[10px] uppercase tracking-wide text-text-muted">{label}</span>
+      <input
+        type="number"
+        step={0.1}
+        defaultValue={Number(value.toFixed(2))}
+        key={value}
+        onBlur={(e) => onCommit(Number(e.target.value))}
+        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+        className="tabular w-full rounded border border-border bg-surface px-1 py-1 text-[12px] outline-none"
+      />
+    </label>
+  );
+}
+
 function RoomInspector() {
   const room = useStore((s) => s.room);
   const unitSystem = useStore((s) => s.unitSystem);
@@ -281,12 +398,14 @@ function RoomInspector() {
           <NumberInput
             value={room.height}
             min={2.2}
-            max={4}
+            max={4.5}
             onCommit={(v) => setRoomDimensions({ height: v })}
             suffix="m"
           />
         </Field>
       </div>
+
+      <OpeningsSection />
 
       <div className="border-t border-border px-4 py-3">
         <div className="flex items-center justify-between">

@@ -37,6 +37,18 @@ function describePlacement(p: Placement) {
   };
 }
 
+function openingsPayload() {
+  return useStore.getState().room.openings.map((o) => ({
+    opening_id: o.id,
+    kind: o.kind,
+    wall: o.wall,
+    offset_m: M2(o.offset),
+    width_m: M2(o.width),
+    sill_m: M2(o.sill),
+    height_m: M2(o.height),
+  }));
+}
+
 function issuesFor(placementId?: string) {
   const s = useStore.getState();
   const report = analyzeLayout(resolvePlacements(s.placements), s.room);
@@ -66,10 +78,13 @@ const getRoom = defineTool(
           length_m: M2(s.room.length),
           height_m: M2(s.room.height),
           openings: s.room.openings.map((o) => ({
+            opening_id: o.id,
             kind: o.kind,
             wall: o.wall,
-            offset_m: o.offset,
-            width_m: o.width,
+            offset_m: M2(o.offset),
+            width_m: M2(o.width),
+            sill_m: M2(o.sill),
+            height_m: M2(o.height),
           })),
         },
         pieces: s.placements.map(describePlacement).filter(Boolean),
@@ -288,6 +303,79 @@ const checkLayout = defineTool(
   },
 );
 
+/** add_opening */
+const addOpening = defineTool(
+  "roomwright_add_opening",
+  "Add a door or window to a wall (north, south, east, or west). It is centred on the wall by default; use update_opening to set its exact offset and size. Returns the new opening_id.",
+  obj(
+    {
+      kind: str("door or window", { enum: ["door", "window"] }),
+      wall: str("which wall", { enum: ["north", "south", "east", "west"] }),
+    },
+    ["kind", "wall"],
+  ),
+  (args: { kind: "door" | "window"; wall: "north" | "south" | "east" | "west" }) => {
+    const res = useStore.getState().addOpening(args.kind, args.wall);
+    if (!res.ok || !res.id) return { ok: false, summary: "could not add opening" };
+    return {
+      ok: true,
+      summary: `Added a ${args.kind} to the ${args.wall} wall.`,
+      payload: { opening_id: res.id, openings: openingsPayload() },
+    };
+  },
+);
+
+/** update_opening */
+const updateOpening = defineTool(
+  "roomwright_update_opening",
+  "Change a door or window. Any of: wall, offset (metres from the wall's start corner), width, sill height (windows), opening height, or kind. Values are clamped to fit the wall and the ceiling.",
+  obj(
+    {
+      opening_id: str("from get_room"),
+      wall: str("move to this wall", { enum: ["north", "south", "east", "west"] }),
+      offset_m: num("distance from the wall's start corner to the opening's near edge"),
+      width_m: num("opening width"),
+      sill_m: num("height of the sill above the floor (windows)"),
+      height_m: num("opening height"),
+      kind: str("door or window", { enum: ["door", "window"] }),
+    },
+    ["opening_id"],
+  ),
+  (args: {
+    opening_id: string;
+    wall?: "north" | "south" | "east" | "west";
+    offset_m?: number;
+    width_m?: number;
+    sill_m?: number;
+    height_m?: number;
+    kind?: "door" | "window";
+  }) => {
+    const res = useStore.getState().updateOpening(args.opening_id, {
+      wall: args.wall,
+      offset: args.offset_m,
+      width: args.width_m,
+      sill: args.sill_m,
+      height: args.height_m,
+      kind: args.kind,
+    });
+    if (!res.ok) return { ok: false, summary: res.reason ?? "could not update opening" };
+    return { ok: true, summary: "Opening updated.", payload: { openings: openingsPayload() } };
+  },
+);
+
+/** remove_opening */
+const removeOpening = defineTool(
+  "roomwright_remove_opening",
+  "Remove a door or window by its opening_id.",
+  obj({ opening_id: str("from get_room") }, ["opening_id"]),
+  (args: { opening_id: string }) => {
+    const res = useStore.getState().removeOpening(args.opening_id);
+    return res.ok
+      ? { ok: true, summary: "Opening removed.", payload: { openings: openingsPayload() } }
+      : { ok: false, summary: "no such opening" };
+  },
+);
+
 /** suggest_spot */
 const suggestSpot = defineTool(
   "roomwright_suggest_spot",
@@ -399,6 +487,9 @@ export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   duplicateItem,
   removeItem,
   setRoomDimensions,
+  addOpening,
+  updateOpening,
+  removeOpening,
   suggestSpot,
   checkLayout,
   getShoppingList,

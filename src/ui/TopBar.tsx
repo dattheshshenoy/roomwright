@@ -3,16 +3,22 @@ import { motion } from "motion/react";
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
+  CaretDown,
+  CopySimple,
   Cube,
   DownloadSimple,
+  Export,
   GridFour,
   Image,
   UploadSimple,
 } from "@phosphor-icons/react";
 import { useStore } from "../state/store";
 import { exportJSON, parseImport } from "../state/persistence";
+import { computeShoppingList } from "../state/selectors";
 import { canvasPNG, downloadFile } from "../lib/download";
+import { formatPrice } from "../lib/units";
 import { ToolsBadge } from "./ToolsBadge";
+import { Popover } from "./primitives/Popover";
 
 export function TopBar() {
   const view = useStore((s) => s.view);
@@ -32,6 +38,19 @@ export function TopBar() {
   };
 
   const exportLayout = () => downloadFile("roomwright-layout.json", exportJSON());
+
+  const copyShoppingList = () => {
+    const { lines, total } = computeShoppingList(useStore.getState().placements);
+    const text =
+      lines.length === 0
+        ? "Nothing placed yet."
+        : [
+            ...lines.map((l) => `${l.quantity} x ${l.name} — ${formatPrice(l.lineTotal)}`),
+            "",
+            `Total: ${formatPrice(total)}`,
+          ].join("\n");
+    void navigator.clipboard?.writeText(text);
+  };
 
   const onImportFile = async (file: File) => {
     try {
@@ -107,15 +126,39 @@ export function TopBar() {
 
         <span className="mx-1 h-5 w-px bg-border" />
 
-        <IconButton label="Save image" onClick={saveImage}>
-          <Image size={15} />
-        </IconButton>
-        <IconButton label="Export layout" onClick={exportLayout}>
-          <DownloadSimple size={15} />
-        </IconButton>
-        <IconButton label="Import layout" onClick={() => fileInput.current?.click()}>
-          <UploadSimple size={15} />
-        </IconButton>
+        <Popover
+          width={220}
+          trigger={(o) => (
+            <span
+              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[12px] transition-colors ${
+                o ? "border-text bg-surface-sunk" : "border-border hover:bg-surface-sunk"
+              }`}
+            >
+              <Export size={13} />
+              Share
+              <CaretDown size={10} weight="bold" className="text-text-muted" />
+            </span>
+          )}
+        >
+          <div className="p-1">
+            <MenuItem icon={<Image size={14} />} label="Save image (PNG)" onClick={saveImage} />
+            <MenuItem
+              icon={<DownloadSimple size={14} />}
+              label="Export layout (JSON)"
+              onClick={exportLayout}
+            />
+            <MenuItem
+              icon={<UploadSimple size={14} />}
+              label="Import layout (JSON)"
+              onClick={() => fileInput.current?.click()}
+            />
+            <MenuItem
+              icon={<CopySimple size={14} />}
+              label="Copy shopping list"
+              onClick={copyShoppingList}
+            />
+          </div>
+        </Popover>
         <input
           ref={fileInput}
           type="file"
@@ -129,6 +172,26 @@ export function TopBar() {
         />
       </div>
     </header>
+  );
+}
+
+function MenuItem({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] text-text transition-colors hover:bg-surface-sunk"
+    >
+      <span className="text-text-muted">{icon}</span>
+      {label}
+    </button>
   );
 }
 
