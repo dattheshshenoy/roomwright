@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
-import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
+import { Environment, Lightformer } from "@react-three/drei";
+import { Bloom, EffectComposer, N8AO, SMAA, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { useStore } from "../state/store";
 import { roomCenter, roomRadius } from "./geometry";
@@ -9,8 +9,9 @@ import { Furniture } from "./Furniture";
 import { Controls } from "./Controls";
 
 /** The 3D stage. Synthetic image-based lighting (no HDRI file), one warm key
- *  light standing in for a window, soft contact shadows to ground everything,
- *  and a restrained post pass (edge AA, a whisper of bloom, a soft vignette). */
+ *  light standing in for a window, real shadow-mapped shadows, and a restrained
+ *  post pass — screen-space AO for contact darkening, a whisper of bloom, edge
+ *  AA, a soft vignette. */
 export function SceneCanvas() {
   const room = useStore((s) => s.room);
   const center = roomCenter(room);
@@ -34,14 +35,15 @@ export function SceneCanvas() {
       <color attach="background" args={["#f2f0ec"]} />
       <fog attach="fog" args={["#f2f0ec", radius * 3.2, radius * 7.5]} />
 
-      <hemisphereLight intensity={0.7} color="#fef7ec" groundColor="#d8d2c6" />
+      <hemisphereLight intensity={0.68} color="#fef7ec" groundColor="#d8d2c6" />
       <directionalLight
         castShadow
         position={[center[0] - radius * 0.7, room.height * 2.6, center[2] - radius * 0.3]}
-        intensity={1.5}
+        intensity={1.55}
         color="#fff1dc"
         shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0002}
+        shadow-bias={-0.00015}
+        shadow-normalBias={0.03}
       >
         <orthographicCamera
           attach="shadow-camera"
@@ -78,19 +80,10 @@ export function SceneCanvas() {
       <Room room={room} />
       <Furniture roomWidth={room.width} roomLength={room.length} />
 
-      <ContactShadows
-        position={[center[0], 0.002, center[2]]}
-        scale={radius * 3}
-        resolution={1024}
-        blur={2.4}
-        opacity={0.42}
-        far={room.height}
-        color="#4a4235"
-      />
-
       <Controls center={center} radius={radius} />
 
-      <EffectComposer enableNormalPass={false} multisampling={0}>
+      <EffectComposer enableNormalPass multisampling={0}>
+        <N8AO aoRadius={0.5} intensity={1.6} distanceFalloff={1} color="#2a2620" />
         <Bloom intensity={0.06} luminanceThreshold={0.9} luminanceSmoothing={0.4} mipmapBlur />
         <Vignette offset={0.35} darkness={0.34} eskil={false} />
         <SMAA />
