@@ -1,8 +1,10 @@
 import { Canvas } from "@react-three/fiber";
-import { AdaptiveDpr, Environment, Lightformer } from "@react-three/drei";
+import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, SMAA, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { useStore } from "../state/store";
+import { useEffectiveQuality, useQuality } from "../state/useQuality";
+import { PROFILE } from "../lib/quality";
 import { roomCenter, roomRadius } from "./geometry";
 import { Room } from "./Room";
 import { Furniture } from "./Furniture";
@@ -10,17 +12,20 @@ import { Controls } from "./Controls";
 
 /** The 3D stage. Synthetic image-based lighting (no HDRI file), one warm key
  *  light standing in for a window, real shadow-mapped shadows, and a restrained
- *  post pass — screen-space AO for contact darkening, a whisper of bloom, edge
- *  AA, a soft vignette. */
+ *  post pass whose weight scales with the quality tier. */
 export function SceneCanvas() {
   const room = useStore((s) => s.room);
+  const q = useEffectiveQuality();
+  const p = PROFILE[q];
+  const reportSlow = useQuality((s) => s.reportSlow);
   const center = roomCenter(room);
   const radius = roomRadius(room);
 
   return (
     <Canvas
+      key={q}
       shadows={{ type: THREE.PCFShadowMap }}
-      dpr={[1, 1.75]}
+      dpr={p.dpr}
       gl={{
         antialias: true,
         preserveDrawingBuffer: true,
@@ -35,13 +40,15 @@ export function SceneCanvas() {
       <color attach="background" args={["#f2f0ec"]} />
       <fog attach="fog" args={["#f2f0ec", radius * 3.2, radius * 7.5]} />
 
+      <PerformanceMonitor onDecline={reportSlow} flipflops={2} />
+
       <hemisphereLight intensity={0.68} color="#fef7ec" groundColor="#d8d2c6" />
       <directionalLight
         castShadow
         position={[center[0] - radius * 0.7, room.height * 2.6, center[2] - radius * 0.3]}
         intensity={1.55}
         color="#fff1dc"
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[p.shadowMap, p.shadowMap]}
         shadow-bias={-0.00015}
         shadow-normalBias={0.03}
       >
@@ -81,24 +88,27 @@ export function SceneCanvas() {
       <Furniture roomWidth={room.width} roomLength={room.length} />
 
       <Controls center={center} radius={radius} />
-
-      {/* drops resolution when the framerate sags, restores it when idle —
-          keeps weak integrated GPUs interactive */}
       <AdaptiveDpr pixelated={false} />
 
-      <EffectComposer enableNormalPass multisampling={0}>
-        <N8AO
-          quality="low"
-          halfRes
-          depthAwareUpsampling
-          aoRadius={0.5}
-          intensity={1.6}
-          distanceFalloff={1}
-          color="#2a2620"
-        />
-        <Bloom intensity={0.06} luminanceThreshold={0.9} luminanceSmoothing={0.4} mipmapBlur />
-        <Vignette offset={0.35} darkness={0.34} eskil={false} />
-        <SMAA />
+      <EffectComposer enableNormalPass={p.ao} multisampling={0}>
+        <>
+          {p.ao && (
+            <N8AO
+              quality={p.aoQuality}
+              halfRes={p.aoHalfRes}
+              depthAwareUpsampling
+              aoRadius={0.5}
+              intensity={1.6}
+              distanceFalloff={1}
+              color="#2a2620"
+            />
+          )}
+          {p.bloom && (
+            <Bloom intensity={0.06} luminanceThreshold={0.9} luminanceSmoothing={0.4} mipmapBlur />
+          )}
+          <Vignette offset={0.35} darkness={0.34} eskil={false} />
+          <SMAA />
+        </>
       </EffectComposer>
     </Canvas>
   );

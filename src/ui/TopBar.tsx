@@ -19,6 +19,7 @@ import { computeShoppingList } from "../state/selectors";
 import { canvasPNG, downloadFile } from "../lib/download";
 import { shareLink } from "../lib/share";
 import { formatPrice } from "../lib/units";
+import { QualityControl } from "./QualityControl";
 import { ToolsBadge } from "./ToolsBadge";
 import { Popover } from "./primitives/Popover";
 
@@ -116,6 +117,8 @@ export function TopBar() {
           value={unitSystem}
           onChange={(v) => setUnitSystem(v as "metric" | "imperial")}
         />
+
+        <QualityControl />
 
         <span className="mx-1 h-5 w-px bg-border" />
 
