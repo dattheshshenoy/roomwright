@@ -5,15 +5,17 @@ and working; everything here is additive. The architecture is already
 dimension-driven — `room` is threaded through every calculation and the furniture
 builders are parametric off `product.dims` — so several of these are small.
 
-## Tier 1 — cheap, low risk
+## Tier 1 — done (`v2026.09.01`+)
 
-| Item | Why | Effort |
-| --- | --- | --- |
-| Widen room limits (2–12 m → 2–20 m) | Removes a limitation a first-time user hits immediately; scene, camera, lighting and clearance already scale off room size | ~10 min |
-| Silence the `THREE.Clock` / `PCFSoftShadowMap` deprecation warnings | Clean console for anyone who opens DevTools | ~30 min |
-| Auto-collapse both rails below ~1100 px viewport | Usable on a 13" laptop instead of a cramped 3-column squeeze | ~1 hr |
-| `resize_item` tool + W/D/H fields in the inspector | Custom sizes without new assets — a placement carries an optional `dims` override; builders and clearance read `placement.dims ?? product.dims`. Twelfth tool; strengthens WebMCP leverage | ~3 hrs |
-| `suggest_spot` tool — returns free-zone / wall-space analysis for a described need | Turns "guess a position" into "reason about the room"; the biggest single upgrade to the agent demo | ~3 hrs |
+| Item | Result |
+| --- | --- |
+| Widen room limits | 1.5–20 m width/length, 2.2–4.5 m height |
+| Silence deprecation warnings | Explicit `PCFShadowMap` type + a narrow `console.warn` filter — console is clean |
+| Auto-collapse rails on narrow viewports | Both rails collapse below 1100 px; the user stays in control otherwise |
+| `resize_item` tool + inspector W/D/H fields | A placement carries an optional `dims` override; `resolvePlacements` swaps it into the product so every builder, measurement and clearance check uses it. "Reset to catalogue" clears it |
+| `suggest_spot` tool | Grids the room, reports open floor + longest clear wall runs, returns up to three candidate positions biased toward an optional anchor and fitting an optional product |
+
+Tool count: 13.
 
 ## Tier 2 — post-submission, in order
 
