@@ -72,6 +72,8 @@ export interface Placement {
   x: number; // centre, room-local
   z: number;
   rotationY: number; // radians, snapped to 15deg
+  /** per-placement override of the product's footprint + height, metres */
+  dims?: { w: number; d: number; h: number };
 }
 
 export type ClearanceStatus = "ok" | "warn" | "bad";

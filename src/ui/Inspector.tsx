@@ -4,6 +4,7 @@ import { CaretRight, SlidersHorizontal, Trash } from "@phosphor-icons/react";
 import { useStore } from "../state/store";
 import { computeShoppingList, resolveSelected } from "../state/selectors";
 import { useLayoutReport } from "../state/useLayoutReport";
+import { getProduct } from "../catalog/catalog";
 import { getVariant } from "../catalog/variants";
 import { formatFootprint, formatLength, formatPrice } from "../lib/units";
 import { Field, NumberInput } from "./primitives/Field";
@@ -71,6 +72,7 @@ function PieceInspector() {
   const unitSystem = useStore((s) => s.unitSystem);
   const setVariant = useStore((s) => s.setVariant);
   const rotatePlacement = useStore((s) => s.rotatePlacement);
+  const resizePlacement = useStore((s) => s.resizePlacement);
   const removePlacement = useStore((s) => s.removePlacement);
   const placements = useStore((s) => s.placements);
   const selectedId = useStore((s) => s.selectedId);
@@ -80,6 +82,8 @@ function PieceInspector() {
   if (!sel) return null;
 
   const { placement, product } = sel;
+  const base = getProduct(product.id);
+  const resized = placement.dims != null;
   const variant = getVariant(product, placement.variantId);
   const issues = report.issues.filter((i) => i.placementId === placement.id);
   const rotationDeg = Math.round((placement.rotationY * 180) / Math.PI);
@@ -129,6 +133,33 @@ function PieceInspector() {
               {formatLength(placement.z, unitSystem)}
             </span>
           </Field>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="section-label">Size</span>
+            {resized && base && (
+              <button
+                onClick={() => resizePlacement(placement.id, base.dims)}
+                className="text-[11px] text-text-muted underline-offset-2 hover:text-text hover:underline"
+              >
+                reset to catalogue
+              </button>
+            )}
+          </div>
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {(["w", "d", "h"] as const).map((k) => (
+              <NumberInput
+                key={k}
+                value={Number(product.dims[k].toFixed(2))}
+                min={0.15}
+                max={8}
+                step={0.05}
+                suffix={k === "w" ? "W" : k === "d" ? "D" : "H"}
+                onCommit={(v) => resizePlacement(placement.id, { [k]: v })}
+              />
+            ))}
+          </div>
         </div>
 
         <Field label="Rotation">
@@ -232,7 +263,7 @@ function RoomInspector() {
           <NumberInput
             value={room.width}
             min={2}
-            max={12}
+            max={20}
             onCommit={(v) => setRoomDimensions({ width: v })}
             suffix="m"
           />
@@ -241,7 +272,7 @@ function RoomInspector() {
           <NumberInput
             value={room.length}
             min={2}
-            max={12}
+            max={20}
             onCommit={(v) => setRoomDimensions({ length: v })}
             suffix="m"
           />

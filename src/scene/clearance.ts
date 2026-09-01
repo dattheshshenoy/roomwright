@@ -56,7 +56,7 @@ function clearanceZone(box: AABB, rotationY: number, depth: number): AABB {
   return zone;
 }
 
-function openingAccessZone(o: Opening, room: Room): AABB {
+export function openingAccessZone(o: Opening, room: Room): AABB {
   const d = OPENING_ACCESS;
   switch (o.wall) {
     case "south":

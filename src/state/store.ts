@@ -53,6 +53,10 @@ export interface Store {
   ) => AddResult;
   movePlacement: (id: string, x: number, z: number) => MoveResult;
   rotatePlacement: (id: string, radians: number, absolute?: boolean) => { ok: boolean };
+  resizePlacement: (
+    id: string,
+    dims: Partial<{ w: number; d: number; h: number }>,
+  ) => { ok: boolean; dims?: { w: number; d: number; h: number }; reason?: string };
   removePlacement: (id: string) => { ok: boolean };
   setVariant: (id: string, variantId: string) => { ok: boolean };
   setRoomDimensions: (dims: Partial<Pick<Room, "width" | "length" | "height">>) => {
@@ -172,6 +176,38 @@ export const useStore = create<Store>((set, get) => {
       return { ok: true };
     },
 
+    resizePlacement: (id, dims) => {
+      const target = get().placements.find((p) => p.id === id);
+      const base = target && getProduct(target.productId);
+      if (!target || !base) return { ok: false, reason: "no such piece" };
+
+      const cur = target.dims ?? base.dims;
+      const clampM = (v: number, fallback: number) =>
+        Number.isFinite(v) ? Math.max(0.15, Math.min(8, v)) : fallback;
+      const next = {
+        w: clampM(dims.w ?? cur.w, cur.w),
+        d: clampM(dims.d ?? cur.d, cur.d),
+        h: clampM(dims.h ?? cur.h, cur.h),
+      };
+
+      const same =
+        Math.abs(next.w - base.dims.w) < 1e-3 &&
+        Math.abs(next.d - base.dims.d) < 1e-3 &&
+        Math.abs(next.h - base.dims.h) < 1e-3;
+      const placementDims = same ? undefined : next;
+
+      const probe: Placement = { ...target, dims: placementDims };
+      const sized = { ...base, dims: placementDims ?? base.dims };
+      const c = clampToRoom(target.x, target.z, probe, sized, get().room);
+
+      commit({
+        placements: get().placements.map((p) =>
+          p.id === id ? { ...p, dims: placementDims, x: c.x, z: c.z } : p,
+        ),
+      });
+      return { ok: true, dims: next };
+    },
+
     removePlacement: (id) => {
       if (!get().placements.some((p) => p.id === id)) return { ok: false };
       commit({
@@ -198,7 +234,7 @@ export const useStore = create<Store>((set, get) => {
         ...room,
         width: clampDim(dims.width ?? room.width),
         length: clampDim(dims.length ?? room.length),
-        height: Math.max(2.2, Math.min(4, dims.height ?? room.height)),
+        height: Math.max(2.2, Math.min(4.5, dims.height ?? room.height)),
       };
       const outOfBounds: string[] = [];
       const kept = resolved().map(({ placement, product }) => {
@@ -266,5 +302,5 @@ export const useStore = create<Store>((set, get) => {
 });
 
 function clampDim(v: number): number {
-  return Math.max(2, Math.min(12, Number.isFinite(v) ? v : 4));
+  return Math.max(1.5, Math.min(20, Number.isFinite(v) ? v : 4));
 }

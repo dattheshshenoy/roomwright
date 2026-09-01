@@ -15,16 +15,33 @@ import { useShortcuts } from "./ui/useShortcuts";
 const DEBUG =
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
 
+const NARROW = "(max-width: 1099px)";
+const isNarrow = () => typeof window !== "undefined" && window.matchMedia(NARROW).matches;
+
 export function App() {
   useWebMCPTools(ROOMWRIGHT_TOOLS);
   useShortcuts();
-  const [railOpen, setRailOpen] = useState(true);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [railOpen, setRailOpen] = useState(() => !isNarrow());
+  const [inspectorOpen, setInspectorOpen] = useState(() => !isNarrow());
 
   useEffect(() => {
     const saved = loadSaved();
     if (saved) useStore.getState().hydrate(saved);
     return startAutosave();
+  }, []);
+
+  // collapse both rails when the viewport crosses below the breakpoint; leave
+  // the user in control otherwise
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW);
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setRailOpen(false);
+        setInspectorOpen(false);
+      }
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   return (

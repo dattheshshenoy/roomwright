@@ -1,12 +1,14 @@
 import { useSyncExternalStore, type ReactNode } from "react";
 import {
   ArrowClockwise,
+  ArrowsOut,
   ArrowsOutCardinal,
   CaretDown,
   CheckCircle,
   Copy,
   Eye,
   ListBullets,
+  MapPin,
   PaintBrushBroad,
   Plus,
   Receipt,
@@ -83,6 +85,11 @@ const GROUPS: ToolGroup[] = [
         icon: <ArrowClockwise size={14} />,
       },
       {
+        name: "resize_item",
+        blurb: "override a piece's width, depth, or height",
+        icon: <ArrowsOut size={14} />,
+      },
+      {
         name: "set_variant",
         blurb: "change a piece's colour or material",
         icon: <PaintBrushBroad size={14} />,
@@ -97,6 +104,11 @@ const GROUPS: ToolGroup[] = [
         name: "set_room_dimensions",
         blurb: "resize the room; pieces are kept inside",
         icon: <Ruler size={14} />,
+      },
+      {
+        name: "suggest_spot",
+        blurb: "where a piece could go — open areas, clear wall runs",
+        icon: <MapPin size={14} />,
       },
       {
         name: "check_layout",

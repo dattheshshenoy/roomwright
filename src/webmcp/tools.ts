@@ -3,6 +3,7 @@ import { DEG, M2, RAD, defineTool } from "./contract";
 import { useStore } from "../state/store";
 import { computeShoppingList, resolvePlacements } from "../state/selectors";
 import { analyzeLayout } from "../scene/clearance";
+import { suggestSpots, type Anchor } from "../scene/suggest";
 import { CATALOG, getProduct } from "../catalog/catalog";
 import { getVariant } from "../catalog/variants";
 import type { Category, Placement } from "../state/types";
@@ -23,6 +24,7 @@ const str = (description: string, extra: Record<string, unknown> = {}) => ({
 function describePlacement(p: Placement) {
   const product = getProduct(p.productId);
   if (!product) return null;
+  const dims = p.dims ?? product.dims;
   return {
     placement_id: p.id,
     product_id: p.productId,
@@ -30,7 +32,8 @@ function describePlacement(p: Placement) {
     variant: getVariant(product, p.variantId).name,
     position: { x: M2(p.x), z: M2(p.z) },
     rotation_degrees: DEG(p.rotationY),
-    footprint_m: { w: product.dims.w, d: product.dims.d },
+    size_m: { w: M2(dims.w), d: M2(dims.d), h: M2(dims.h) },
+    resized: p.dims != null,
   };
 }
 
@@ -78,7 +81,7 @@ const getRoom = defineTool(
 /** set_room_dimensions */
 const setRoomDimensions = defineTool(
   "roomwright_set_room_dimensions",
-  "Resize the room. Any of width, length, height in metres (width 2-12, length 2-12, height 2.2-4). Pieces that fall outside the new bounds are pulled back inside and reported.",
+  "Resize the room. Any of width, length, height in metres (width 1.5-20, length 1.5-20, height 2.2-4.5). Pieces that fall outside the new bounds are pulled back inside and reported.",
   obj({
     width: num("interior width, metres"),
     length: num("interior length, metres"),
@@ -219,6 +222,33 @@ const rotateItem = defineTool(
   },
 );
 
+/** resize_item */
+const resizeItem = defineTool(
+  "roomwright_resize_item",
+  "Override a placed piece's size — width (along its own left-right), depth (front-back), height, in metres. Give any subset; each is clamped to 0.15-8 m. The piece re-renders at the new size and its clearance is recomputed. Setting all three back to the catalogue size clears the override.",
+  obj(
+    {
+      placement_id: str("from get_room"),
+      width: num("new width, metres"),
+      depth: num("new depth, metres"),
+      height: num("new height, metres"),
+    },
+    ["placement_id"],
+  ),
+  (args: { placement_id: string; width?: number; depth?: number; height?: number }) => {
+    const res = useStore
+      .getState()
+      .resizePlacement(args.placement_id, { w: args.width, d: args.depth, h: args.height });
+    if (!res.ok || !res.dims) return { ok: false, summary: res.reason ?? "could not resize" };
+    const p = useStore.getState().placements.find((x) => x.id === args.placement_id)!;
+    return {
+      ok: true,
+      summary: `Resized to ${M2(res.dims.w)} x ${M2(res.dims.d)} x ${M2(res.dims.h)} m.`,
+      payload: { placement: describePlacement(p), issues: issuesFor(args.placement_id) },
+    };
+  },
+);
+
 /** remove_item */
 const removeItem = defineTool(
   "roomwright_remove_item",
@@ -254,6 +284,36 @@ const checkLayout = defineTool(
         narrowest_walkway_m: report.narrowestWalkway === null ? null : M2(report.narrowestWalkway),
         issues: issuesFor(),
       },
+    };
+  },
+);
+
+/** suggest_spot */
+const suggestSpot = defineTool(
+  "roomwright_suggest_spot",
+  "Ask where a piece could go. Optionally pass product_id (so the spots actually fit that piece) and near (a wall, the centre, the window, or the door) to bias the result. Returns the total open floor, the longest clear run along each wall, and up to three candidate positions with x/z in metres, a rotation, whether each sits against a wall, and how much clear space surrounds it.",
+  obj({
+    product_id: str("optional — from list_catalog, so candidates fit this piece"),
+    near: str("optional bias", {
+      enum: ["north", "south", "east", "west", "centre", "window", "door"],
+    }),
+  }),
+  (args: { product_id?: string; near?: Anchor }) => {
+    const s = useStore.getState();
+    const product = args.product_id ? getProduct(args.product_id) : undefined;
+    if (args.product_id && !product)
+      return { ok: false, summary: `unknown product "${args.product_id}"` };
+    const report = suggestSpots(s.room, resolvePlacements(s.placements), {
+      product,
+      near: args.near,
+    });
+    return {
+      ok: true,
+      summary:
+        report.suggestions.length === 0
+          ? "No clear spot found — the room is full or the piece is too big."
+          : `${report.suggestions.length} spot(s); ${report.open_floor_m2} m2 open floor.`,
+      payload: report,
     };
   },
 );
@@ -334,10 +394,12 @@ export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   addItem,
   moveItem,
   rotateItem,
+  resizeItem,
   setVariant,
   duplicateItem,
   removeItem,
   setRoomDimensions,
+  suggestSpot,
   checkLayout,
   getShoppingList,
 ];

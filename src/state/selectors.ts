@@ -6,11 +6,17 @@ export interface ResolvedPlacement {
   product: Product;
 }
 
+/** The product a placement renders and is measured as — the catalogue product,
+ *  with its dimensions replaced by the placement's override when present. */
+export function effectiveProduct(placement: Placement, product: Product): Product {
+  return placement.dims ? { ...product, dims: placement.dims } : product;
+}
+
 export function resolvePlacements(placements: Placement[]): ResolvedPlacement[] {
   const out: ResolvedPlacement[] = [];
   for (const placement of placements) {
-    const product = getProduct(placement.productId);
-    if (product) out.push({ placement, product });
+    const base = getProduct(placement.productId);
+    if (base) out.push({ placement, product: effectiveProduct(placement, base) });
   }
   return out;
 }
@@ -21,8 +27,8 @@ export function resolveSelected(
 ): ResolvedPlacement | null {
   if (!selectedId) return null;
   const placement = placements.find((p) => p.id === selectedId);
-  const product = placement && getProduct(placement.productId);
-  return placement && product ? { placement, product } : null;
+  const base = placement && getProduct(placement.productId);
+  return placement && base ? { placement, product: effectiveProduct(placement, base) } : null;
 }
 
 export interface ShoppingLine {

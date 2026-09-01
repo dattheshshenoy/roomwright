@@ -16,7 +16,7 @@ export function SceneCanvas() {
 
   return (
     <Canvas
-      shadows
+      shadows={{ type: THREE.PCFShadowMap }}
       dpr={[1, 2]}
       gl={{
         antialias: true,
