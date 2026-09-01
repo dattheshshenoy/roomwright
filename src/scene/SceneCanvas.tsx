@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { Environment, Lightformer } from "@react-three/drei";
+import { AdaptiveDpr, Environment, Lightformer } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, SMAA, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { useStore } from "../state/store";
@@ -20,7 +20,7 @@ export function SceneCanvas() {
   return (
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
-      dpr={[1, 2]}
+      dpr={[1, 1.75]}
       gl={{
         antialias: true,
         preserveDrawingBuffer: true,
@@ -82,8 +82,20 @@ export function SceneCanvas() {
 
       <Controls center={center} radius={radius} />
 
+      {/* drops resolution when the framerate sags, restores it when idle —
+          keeps weak integrated GPUs interactive */}
+      <AdaptiveDpr pixelated={false} />
+
       <EffectComposer enableNormalPass multisampling={0}>
-        <N8AO aoRadius={0.5} intensity={1.6} distanceFalloff={1} color="#2a2620" />
+        <N8AO
+          quality="low"
+          halfRes
+          depthAwareUpsampling
+          aoRadius={0.5}
+          intensity={1.6}
+          distanceFalloff={1}
+          color="#2a2620"
+        />
         <Bloom intensity={0.06} luminanceThreshold={0.9} luminanceSmoothing={0.4} mipmapBlur />
         <Vignette offset={0.35} darkness={0.34} eskil={false} />
         <SMAA />
