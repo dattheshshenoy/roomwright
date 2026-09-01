@@ -1,6 +1,7 @@
 /** Minimal ambient types for the emerging WebMCP browser API.
- *  The spec is in flux between `navigator.modelContext` and
- *  `document.modelContext`; we probe both at runtime (see register.ts). */
+ *  The canonical spec and ChatGPT's in-app browser both expose
+ *  `document.modelContext`; older builds used `navigator.modelContext`,
+ *  so register.ts probes both at runtime. */
 
 export interface ModelContextToolResultContent {
   type: "text";
@@ -16,12 +17,21 @@ export interface ModelContextToolDescriptor {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  /** hints such as { readOnlyHint: true } — advisory, safe to omit */
+  annotations?: Record<string, unknown>;
   execute: (args: Record<string, unknown>) => Promise<ModelContextToolResult>;
 }
 
+export interface ModelContextRegisterOptions {
+  /** Abort this signal to unregister the tool. There is no unregister method. */
+  signal?: AbortSignal;
+}
+
 export interface ModelContext {
-  registerTool: (tool: ModelContextToolDescriptor) => void | Promise<void>;
-  unregisterTool?: (name: string) => void | Promise<void>;
+  registerTool: (
+    tool: ModelContextToolDescriptor,
+    options?: ModelContextRegisterOptions,
+  ) => void | Promise<void>;
 }
 
 declare global {

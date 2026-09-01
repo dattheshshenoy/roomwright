@@ -126,7 +126,7 @@ const listCatalog = defineTool(
   "List the furniture catalogue. Optionally filter by category. Each entry has product_id, dimensions (metres), colour/finish variants, price (USD), and the free space the piece needs in front of it.",
   obj({
     category: str("optional filter", {
-      enum: ["seating", "tables", "sleeping", "storage", "lighting", "decor"],
+      enum: ["seating", "tables", "sleeping", "storage", "lighting", "decor", "custom"],
     }),
   }),
   (args: { category?: Category }) => {
@@ -165,12 +165,12 @@ const createCustomItem = defineTool(
       z: num("centre z, metres"),
       rotation_degrees: num("clockwise from facing +z"),
     },
-    ["shape", "width", "depth", "height"],
+    ["shape", "width", "height"],
   ),
   (args: {
     shape: "box" | "cylinder" | "panel" | "platform";
     width: number;
-    depth: number;
+    depth?: number;
     height: number;
     name?: string;
     color?: string;
@@ -182,7 +182,7 @@ const createCustomItem = defineTool(
       shape: args.shape,
       name: args.name,
       width: args.width,
-      depth: args.depth,
+      depth: args.depth ?? args.width,
       height: args.height,
       color: args.color,
     });
@@ -500,7 +500,7 @@ const duplicateItem = defineTool(
       variantId: src.variantId,
       x: src.x + 0.5,
       z: src.z + 0.5,
-      rotationY: (src.rotationY * 180) / Math.PI,
+      rotationY: src.rotationY,
     });
     if (!res.ok || !res.placementId)
       return { ok: false, summary: res.reason ?? "could not duplicate" };
