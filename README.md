@@ -11,7 +11,7 @@ tools while you watch it render live in 3D and correct it by hand.
 
 No backend. Your room data never leaves the browser.
 
-- **Live:** _add URL after deploy_
+- **Live:** https://dattheshshenoy.github.io/roomwright/
 - **Demo video:** _add YouTube link_
 
 ## Try it with an agent
@@ -65,8 +65,10 @@ npm run typecheck
 npm run lint
 ```
 
-Node 20+. Deploys as a static site to Netlify or Cloudflare Pages with no
-configuration beyond `netlify.toml` (build `npm run build`, publish `dist`).
+Node 20+. `npm run deploy` publishes to GitHub Pages
+(https://dattheshshenoy.github.io/roomwright/). See [`docs/DEPLOY.md`](docs/DEPLOY.md)
+— `netlify.toml` is also committed for a zero-config Netlify / Cloudflare Pages
+deploy.
 
 ## Documentation
 
