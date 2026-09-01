@@ -28,7 +28,7 @@ export function AgentLog() {
           room.
         </p>
       ) : (
-        <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
+        <ul className="max-h-[36vh] min-h-0 flex-1 divide-y divide-border overflow-y-auto">
           <AnimatePresence initial={false}>
             {entries.map((e) => (
               <motion.li

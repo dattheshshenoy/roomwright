@@ -42,7 +42,7 @@ export function Inspector({ open, onToggle }: Props) {
   }
 
   return (
-    <div className="relative grid h-full grid-rows-[1fr_auto] overflow-hidden border-l border-border bg-surface">
+    <div className="relative grid h-full grid-rows-[minmax(0,1fr)_auto] overflow-hidden border-l border-border bg-surface">
       <button
         onClick={onToggle}
         title="Collapse inspector"
