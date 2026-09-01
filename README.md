@@ -73,13 +73,15 @@ configuration beyond `netlify.toml` (build `npm run build`, publish `dist`).
 | [`docs/PLAN.md`](docs/PLAN.md) | build phases, commit sequence, scope boundary, risks |
 | [`docs/ASSETS.md`](docs/ASSETS.md) | why furniture is parametric; asset sources and licences |
 | [`docs/DEMO.md`](docs/DEMO.md) | the submission video script and recording checklist |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | planned improvements, ordered by achievability |
 
 ## Where this goes next
 
-Photo-assisted room setup, L-shaped and multi-room plans, style presets, a
-walk-through camera, importing a phone LiDAR scan, and swapping the parametric
-furniture for real glTF models — the catalogue, state, tools, and UI are already
-model-agnostic.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Near-term: wider rooms, a `resize_item`
+tool for custom sizes, a `suggest_spot` tool for spatial guidance. Then a
+graphics lift, custom parametric primitives, real glTF furniture, and
+photo-assisted room setup — the catalogue, state, tools, and UI are already
+dimension-driven and model-agnostic.
 
 ## Licence
 
