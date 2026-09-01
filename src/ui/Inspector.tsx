@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Trash } from "@phosphor-icons/react";
+import { CaretRight, SlidersHorizontal, Trash } from "@phosphor-icons/react";
 import { useStore } from "../state/store";
 import { computeShoppingList, resolveSelected } from "../state/selectors";
 import { useLayoutReport } from "../state/useLayoutReport";
@@ -10,13 +10,45 @@ import { Field, NumberInput } from "./primitives/Field";
 import { Button } from "./primitives/Button";
 import { AgentLog } from "./AgentLog";
 
-export function Inspector() {
+interface Props {
+  open: boolean;
+  onToggle: () => void;
+}
+
+export function Inspector({ open, onToggle }: Props) {
   const placements = useStore((s) => s.placements);
   const selectedId = useStore((s) => s.selectedId);
   const selected = useMemo(() => resolveSelected(placements, selectedId), [placements, selectedId]);
 
+  if (!open) {
+    return (
+      <button
+        onClick={onToggle}
+        title="Open inspector"
+        className="flex h-full w-full flex-col items-center gap-3 border-l border-border bg-surface pt-3 text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+      >
+        <span className="relative">
+          <SlidersHorizontal size={17} />
+          {selected && (
+            <span className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-accent" />
+          )}
+        </span>
+        <span className="section-label" style={{ writingMode: "vertical-rl" }}>
+          Inspector
+        </span>
+      </button>
+    );
+  }
+
   return (
-    <div className="grid h-full grid-rows-[1fr_auto] overflow-hidden border-l border-border bg-surface">
+    <div className="relative grid h-full grid-rows-[1fr_auto] overflow-hidden border-l border-border bg-surface">
+      <button
+        onClick={onToggle}
+        title="Collapse inspector"
+        className="absolute right-2 top-2.5 z-20 grid h-6 w-6 place-items-center rounded-md text-text-muted transition-colors hover:bg-surface-sunk hover:text-text"
+      >
+        <CaretRight size={14} />
+      </button>
       <div className="min-h-0 overflow-y-auto">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

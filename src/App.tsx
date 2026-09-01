@@ -19,6 +19,7 @@ export function App() {
   useWebMCPTools(ROOMWRIGHT_TOOLS);
   useShortcuts();
   const [railOpen, setRailOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
 
   useEffect(() => {
     const saved = loadSaved();
@@ -30,30 +31,35 @@ export function App() {
     <div className="grain grid h-full grid-rows-[3.25rem_1fr] overflow-hidden bg-bg text-text">
       <TopBar />
 
-      <div
-        className="grid min-h-0 overflow-hidden transition-[grid-template-columns] duration-200"
-        style={{ gridTemplateColumns: `${railOpen ? "19rem" : "3rem"} 1fr 20rem` }}
-      >
+      <div className="flex min-h-0 overflow-hidden">
         <aside
-          className="relative z-10 flex min-h-0 flex-col overflow-hidden border-r border-border bg-surface"
-          style={{ boxShadow: "1px 0 0 rgba(42,40,36,0.02), 8px 0 24px -16px rgba(42,40,36,0.1)" }}
+          className="relative z-10 flex min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-surface transition-[width] duration-200"
+          style={{
+            width: railOpen ? "19rem" : "3rem",
+            boxShadow: "1px 0 0 rgba(42,40,36,0.02), 8px 0 24px -16px rgba(42,40,36,0.1)",
+          }}
         >
           <CatalogRail open={railOpen} onToggle={() => setRailOpen((v) => !v)} />
         </aside>
 
-        <main className="relative min-h-0 bg-surface-sunk">
+        <main className="relative min-h-0 min-w-0 flex-1 bg-surface-sunk">
           <SceneCanvas />
           <EmptyRoom />
           <LayoutStatus />
         </main>
 
         <aside
-          className="relative z-10 min-h-0"
+          className="relative z-10 min-h-0 shrink-0 overflow-hidden transition-[width] duration-200"
           style={{
+            width: DEBUG || inspectorOpen ? "20rem" : "3rem",
             boxShadow: "-1px 0 0 rgba(42,40,36,0.02), -8px 0 24px -16px rgba(42,40,36,0.1)",
           }}
         >
-          {DEBUG ? <DebugPanel /> : <Inspector />}
+          {DEBUG ? (
+            <DebugPanel />
+          ) : (
+            <Inspector open={inspectorOpen} onToggle={() => setInspectorOpen((v) => !v)} />
+          )}
         </aside>
       </div>
     </div>
