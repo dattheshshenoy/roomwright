@@ -1,6 +1,8 @@
 import { useWebMCPTools } from "./webmcp/register";
 import type { ModelContextToolDescriptor } from "./webmcp/modelContext";
 import { SceneCanvas } from "./scene/SceneCanvas";
+import { CatalogRail } from "./ui/CatalogRail";
+import { useShortcuts } from "./ui/useShortcuts";
 
 /** Phase-0 placeholder tool: proves the registration path end to end.
  *  Replaced by the eight real tools in the WebMCP phase. */
@@ -17,6 +19,7 @@ const placeholderTools: ModelContextToolDescriptor[] = [
 
 export function App() {
   useWebMCPTools(placeholderTools);
+  useShortcuts();
 
   return (
     <div className="grid h-full grid-rows-[3.25rem_1fr] bg-bg text-text">
@@ -29,8 +32,8 @@ export function App() {
       </header>
 
       <div className="grid grid-cols-[20rem_1fr_20rem] overflow-hidden">
-        <aside className="border-r border-border bg-surface p-4">
-          <p className="section-label">Catalogue</p>
+        <aside className="border-r border-border bg-surface">
+          <CatalogRail />
         </aside>
 
         <main className="relative bg-surface-sunk">

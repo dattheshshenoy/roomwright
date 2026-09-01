@@ -4,12 +4,14 @@ import * as THREE from "three";
 import { useStore } from "../state/store";
 import { roomCenter, roomRadius } from "./geometry";
 import { Room } from "./Room";
+import { Furniture } from "./Furniture";
 import { Controls } from "./Controls";
 
 /** The 3D stage. Synthetic image-based lighting (no HDRI file), one warm key
  *  light standing in for a window, soft contact shadows to ground everything. */
 export function SceneCanvas() {
   const room = useStore((s) => s.room);
+  const select = useStore((s) => s.select);
   const center = roomCenter(room);
   const radius = roomRadius(room);
 
@@ -22,6 +24,7 @@ export function SceneCanvas() {
         fov: 40,
         position: [center[0] + radius * 1.35, radius * 1.3, center[2] + radius * 1.55],
       }}
+      onPointerMissed={() => select(null)}
     >
       <color attach="background" args={["#f4f3f1"]} />
       <fog attach="fog" args={["#f4f3f1", radius * 3, radius * 7]} />
@@ -70,6 +73,7 @@ export function SceneCanvas() {
       </Environment>
 
       <Room room={room} />
+      <Furniture roomWidth={room.width} roomLength={room.length} />
 
       <ContactShadows
         position={[center[0], 0.002, center[2]]}
