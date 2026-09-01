@@ -3,6 +3,10 @@
 Deadline: 2026-09-03 13:00 PT. Standalone-first — the app works without an agent
 at every stage; WebMCP is additive.
 
+**Status:** phases 0–7 complete. Remaining before submission: deploy to a live
+URL, record the demo video ([`DEMO.md`](DEMO.md)), fill the URLs into the README,
+submit on Devpost.
+
 ## Phases
 
 | # | Phase | Deliverable | Verify |

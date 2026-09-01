@@ -15,6 +15,9 @@ export const webmcpAvailable = () => getModelContext() !== null;
  *  the view that owns them. No-ops cleanly when WebMCP is absent. */
 export function useWebMCPTools(tools: ModelContextToolDescriptor[]): void {
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as unknown as { __roomwright?: unknown }).__roomwright = { tools };
+    }
     const ctx = getModelContext();
     if (!ctx) {
       console.info(

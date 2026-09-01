@@ -20,47 +20,68 @@ No backend. No router (single view). No test framework for the challenge build
 ```
 src/
   main.tsx                 entry, mounts <App/>
-  App.tsx                  the three-zone shell
+  App.tsx                  the three-zone shell; hydrates + autosaves; ?debug swap
+  index.css                Tailwind v4 + the DESIGN.md tokens as @theme vars
 
   state/
-    store.ts               zustand store: room, placements, selection, agentLog
-    types.ts               Room, Product, Placement, ClearanceReport, ...
-    selectors.ts           derived: shoppingList, boundsForPlacement, ...
-    persistence.ts         localStorage load/save, JSON import/export
+    store.ts               zustand store: room, placements, selection, agentLog,
+                           bounded undo/redo; every mutation is one commit path
+    types.ts               Room, Product, Placement, Opening, LayoutReport, ...
+    selectors.ts           pure derivations: resolvePlacements, resolveSelected,
+                           computeShoppingList (take primitives, memoised in UI)
+    useLayoutReport.ts     memoised analyzeLayout hook for the UI
+    persistence.ts         localStorage load / autosave / JSON import + export
 
   catalog/
-    catalog.ts             the product data (12 pieces, real dimensions)
-    builders/              parametric mesh builders, one per product `kind`
-      Sofa.tsx  Chair.tsx  Table.tsx  Bed.tsx  Rug.tsx  Lamp.tsx
-      Shelf.tsx  Plant.tsx  Screen.tsx
-      index.ts             kind -> builder map
+    catalog.ts             the twelve products, real dimensions + variants + price
+    variants.ts            variant lookup with fallback
+    builders/
+      index.tsx            all twelve parametric mesh builders + FurniturePiece
+      material.ts          finish -> roughness/metalness; shared wood/screen mats
 
   scene/
-    Canvas.tsx             <Canvas> config: renderer, camera, lighting, env
-    Room.tsx               parametric walls / floor / openings, dollhouse fade
-    Furniture.tsx          renders placements, selection outline
-    Placement.tsx          one piece: builder + drag + rotate handle
-    Controls.tsx           OrbitControls wrapper, view presets (orbit / top)
-    grid.ts                floor grid + snap math
-    clearance.ts           bounding-box overlap, walkway analysis
+    SceneCanvas.tsx        <Canvas>: renderer, camera, lights, synthetic env,
+                           contact shadows
+    Room.tsx               parametric walls / floor / openings, dollhouse fade,
+                           floor click = deselect
+    Furniture.tsx          renders placements, owns drag, feeds status colours
+    Placement.tsx          one piece: invisible hit volume + builder + marker
+    Controls.tsx           OrbitControls wrapper, eased orbit / plan presets
+    geometry.ts            wall frames, wall-solid rects, room centre / radius
+    clearance.ts           collisions, clearance zones, blocked openings, walkways
 
   webmcp/
-    register.ts            registers all tools on mount, unregisters on unmount
-    tools/                 one file per tool, each exports { schema, execute }
-      getRoom.ts  setRoomDimensions.ts  listCatalog.ts
-      addItem.ts  moveItem.ts  rotateItem.ts  removeItem.ts  checkLayout.ts
-    contract.ts            shared zod-style schema helpers, result formatting
+    modelContext.d.ts      ambient types for the emerging navigator.modelContext
+    register.ts            useWebMCPTools — register on mount, unregister on
+                           unmount; probes navigator.* and document.*; no-ops
+                           cleanly when absent
+    contract.ts            defineTool: log every call, shape the result
+    tools.ts               the eight tool definitions (schema + execute)
 
   ui/
-    TopBar.tsx  CatalogRail.tsx  Inspector.tsx  AgentLog.tsx
-    RoomDimensions.tsx  ExportMenu.tsx  EmptyRoom.tsx
-    primitives/           Button, Field, Badge, Panel, Skeleton
+    TopBar.tsx             view / units toggles, undo/redo, save image, export,
+                           import
+    CatalogRail.tsx        catalogue grouped by category, click to add
+    Inspector.tsx          selected-piece panel or room panel + shopping list
+    AgentLog.tsx           every WebMCP call, newest first
+    LayoutStatus.tsx       standing health pill under the canvas
+    EmptyRoom.tsx          prompt shown until the first piece lands
+    DebugPanel.tsx         dev-only tool harness (?debug)
+    useShortcuts.ts        R / Delete / Escape / Cmd+Z
+    primitives/            Button, Field + NumberInput
 
   lib/
-    units.ts               meters <-> ft/in display, formatting
-    id.ts                  placement id generation
-    screenshot.ts          canvas -> PNG data URL
+    units.ts               metres <-> ft/in display + formatting
+    geometry.ts            rotated-footprint AABB, room clamp, auto-placement
+    id.ts                  short stable ids
+    cursor.ts              body cursor helper
+    download.ts            file download + canvas -> PNG blob
 ```
+
+Two places diverge from a strict one-file-per-item layout for readability: the
+twelve furniture builders live in one `builders/index.tsx` (they share helpers
+and a single material language), and the eight tools live in one `webmcp/tools.ts`
+(they share the `defineTool` wrapper and schema helpers).
 
 ## State model
 
