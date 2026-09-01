@@ -56,7 +56,7 @@ src/
                            unmount; probes navigator.* and document.*; no-ops
                            cleanly when absent
     contract.ts            defineTool: log every call, shape the result
-    tools.ts               the sixteen tool definitions (schema + execute)
+    tools.ts               the seventeen tool definitions (schema + execute)
 
   ui/
     TopBar.tsx             view / units toggles, undo/redo, save image, export,
@@ -80,7 +80,7 @@ src/
 
 Two places diverge from a strict one-file-per-item layout for readability: the
 twelve furniture builders live in one `builders/index.tsx` (they share helpers
-and a single material language), and the sixteen tools live in one `webmcp/tools.ts`
+and a single material language), and the seventeen tools live in one `webmcp/tools.ts`
 (they share the `defineTool` wrapper and schema helpers).
 
 ## State model

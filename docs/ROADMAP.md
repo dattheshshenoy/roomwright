@@ -19,18 +19,27 @@ builders are parametric off `product.dims` — so several of these are small.
 
 Tool count: 16.
 
-## Tier 2 — post-submission, in order
+## Tier 2 — batch one, done (`v2026.09.01.3`)
+
+| Item | Result |
+| --- | --- |
+| Graphics pass | `@react-three/postprocessing` — mipmap bloom (0.06), soft vignette, SMAA; shadow map pinned to `PCFShadowMap`. Screen-space only, no material-shader patching. Synthetic Lightformer env retained (no HDRI file) |
+| Custom parametric primitives | `custom` product kind — box / cylinder / panel / platform, any W/D/H + colour. Catalogue-rail form + `create_custom_item` tool; `list_catalog` returns them; persisted with the layout (save file v2, v1 still loads) |
+| Shareable layout URLs | Share menu → "Copy share link"; the whole layout base64url-encoded into `?layout=`. Opening the link hydrates from it instead of localStorage |
+
+Tool count: 17.
+
+## Tier 2 — remaining, genuinely multi-day (after Sept 3)
+
+Each carries real regression risk against a working submission.
 
 | Item | Notes | Effort |
 | --- | --- | --- |
-| Graphics lift | Real interior HDRI for image-based lighting + `postprocessing` (subtle SSAO, bloom, vignette) | ~half day |
-| Custom parametric primitives | A `custom` builder kind: box / cylinder / panel / platform, with a name + W/D/H + colour. Covers built-in wardrobes, ottomans, room dividers. No uploads | ~half day |
-| Real glTF furniture | Kenney / Quaternius CC0 packs for a cohesive set — the single biggest visual jump. Catalogue, state, tools and UI are already model-agnostic | ~1 day |
-| Photo-assisted room setup | Upload a phone photo; the agent asks clarifying questions and places the fixed elements (door, windows, built-ins). Was the "hero feature" in `VISION.md` | ~1–2 days |
-| L-shaped / polygon rooms | Replace `width × length` with an outline polygon. `wallFrames` already abstracts a wall as a run + inward normal; clamping becomes point-in-polygon | ~1–2 days |
-| glTF / GLB upload | "Bring your own model" — load from a blob URL, auto-centre + scale to a bounding box, user confirms real-world dimensions so clearance stays honest, persist to IndexedDB | ~1–2 days |
-| "Render this view" | A path-traced photoreal still via `three-gpu-pathtracer` — one hero image without real-time cost | ~1 day |
-| Shareable layout URLs | Encode the layout in the URL so it is a link; no backend | ~half day |
+| Real glTF furniture | Kenney / Quaternius CC0 packs — the biggest visual jump, but asset sourcing and consistency work. Catalogue, state, tools and UI are already model-agnostic | ~1 day |
+| Photo-assisted room setup | Upload a phone photo; the agent asks clarifying questions and places the fixed elements. Needs a vision path; demo-fragile | ~1–2 days |
+| L-shaped / polygon rooms | Replace `width × length` with an outline polygon. Touches `geometry.ts`, `clampToRoom`, `clearance.ts`, `suggest.ts`, `Room.tsx` — high regression surface | ~1–2 days |
+| glTF / GLB upload | "Bring your own model" — blob URL, auto-centre + scale, confirm dimensions, IndexedDB persistence | ~1–2 days |
+| "Render this view" | Path-traced photoreal still via `three-gpu-pathtracer` — heavy dependency | ~1 day |
 
 ## Not planned
 
