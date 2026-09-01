@@ -1,7 +1,7 @@
 import type { ModelContextToolDescriptor } from "./modelContext";
 import { DEG, M2, RAD, defineTool } from "./contract";
 import { useStore } from "../state/store";
-import { resolvePlacements } from "../state/selectors";
+import { computeShoppingList, resolvePlacements } from "../state/selectors";
 import { analyzeLayout } from "../scene/clearance";
 import { CATALOG, getProduct } from "../catalog/catalog";
 import { getVariant } from "../catalog/variants";
@@ -258,13 +258,86 @@ const checkLayout = defineTool(
   },
 );
 
+/** set_variant */
+const setVariant = defineTool(
+  "roomwright_set_variant",
+  "Change a placed piece's colour or material. variant_id comes from list_catalog's variants list for that product.",
+  obj(
+    { placement_id: str("from get_room"), variant_id: str("a variant id for the piece's product") },
+    ["placement_id", "variant_id"],
+  ),
+  (args: { placement_id: string; variant_id: string }) => {
+    const res = useStore.getState().setVariant(args.placement_id, args.variant_id);
+    if (!res.ok)
+      return { ok: false, summary: "no such piece, or that variant is not valid for it" };
+    const p = useStore.getState().placements.find((x) => x.id === args.placement_id)!;
+    const product = getProduct(p.productId)!;
+    return {
+      ok: true,
+      summary: `${product.name} is now ${getVariant(product, p.variantId).name}.`,
+      payload: describePlacement(p),
+    };
+  },
+);
+
+/** duplicate_item */
+const duplicateItem = defineTool(
+  "roomwright_duplicate_item",
+  "Add another copy of a placed piece — same product and variant — offset slightly so it does not overlap. Useful for pairs of chairs, matching side tables, and the like.",
+  obj({ placement_id: str("from get_room") }, ["placement_id"]),
+  (args: { placement_id: string }) => {
+    const src = useStore.getState().placements.find((x) => x.id === args.placement_id);
+    if (!src) return { ok: false, summary: "no such piece" };
+    const res = useStore.getState().addPlacement(src.productId, {
+      variantId: src.variantId,
+      x: src.x + 0.5,
+      z: src.z + 0.5,
+      rotationY: (src.rotationY * 180) / Math.PI,
+    });
+    if (!res.ok || !res.placementId)
+      return { ok: false, summary: res.reason ?? "could not duplicate" };
+    const p = useStore.getState().placements.find((x) => x.id === res.placementId)!;
+    return {
+      ok: true,
+      summary: `Duplicated ${getProduct(src.productId)?.name} at (${M2(p.x)}, ${M2(p.z)}) m.`,
+      payload: { placement: describePlacement(p), issues: issuesFor(res.placementId) },
+    };
+  },
+);
+
+/** get_shopping_list */
+const getShoppingList = defineTool(
+  "roomwright_get_shopping_list",
+  "The pieces currently in the room as a shopping list — each product with quantity, unit price, and line total, plus the grand total in USD.",
+  obj({}),
+  () => {
+    const list = computeShoppingList(useStore.getState().placements);
+    return {
+      ok: true,
+      summary: `${list.lines.reduce((n, l) => n + l.quantity, 0)} piece(s), ${list.total.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })} total.`,
+      payload: {
+        lines: list.lines.map((l) => ({
+          product: l.name,
+          quantity: l.quantity,
+          unit_price_usd: l.unitPrice,
+          line_total_usd: l.lineTotal,
+        })),
+        total_usd: list.total,
+      },
+    };
+  },
+);
+
 export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   getRoom,
   listCatalog,
   addItem,
   moveItem,
   rotateItem,
+  setVariant,
+  duplicateItem,
   removeItem,
   setRoomDimensions,
   checkLayout,
+  getShoppingList,
 ];

@@ -56,7 +56,7 @@ src/
                            unmount; probes navigator.* and document.*; no-ops
                            cleanly when absent
     contract.ts            defineTool: log every call, shape the result
-    tools.ts               the eight tool definitions (schema + execute)
+    tools.ts               the eleven tool definitions (schema + execute)
 
   ui/
     TopBar.tsx             view / units toggles, undo/redo, save image, export,
@@ -80,7 +80,7 @@ src/
 
 Two places diverge from a strict one-file-per-item layout for readability: the
 twelve furniture builders live in one `builders/index.tsx` (they share helpers
-and a single material language), and the eight tools live in one `webmcp/tools.ts`
+and a single material language), and the eleven tools live in one `webmcp/tools.ts`
 (they share the `defineTool` wrapper and schema helpers).
 
 ## State model
@@ -129,15 +129,13 @@ history of store snapshots.
 
 ## The WebMCP contract
 
-`webmcp/register.ts` runs once on `App` mount inside a `useEffect`, registers the
-eight tools, and unregisters on unmount (so tools never outlive the view).
+`webmcp/register.ts` runs once on `App` mount inside a `useEffect`, registers
+every tool, and unregisters on unmount (so tools never outlive the view). The top
+bar's `ToolsBadge` shows the live count and lists each tool with its description
+and the current agent-connection state.
 
-Each tool module exports:
-
-```ts
-export const schema = { name, description, inputSchema };   // JSON Schema
-export async function execute(args): Promise<ToolResult>;   // reads/writes store
-```
+Each tool is built by `defineTool(name, description, inputSchema, run)`, which
+wraps `run` so every call is logged and the result is shaped for the runtime.
 
 Rules the tools obey:
 
@@ -162,8 +160,11 @@ Rules the tools obey:
 | `add_item` | `{ product_id, variant?, position?, rotation? }` | `placement_id`; auto-placed against a free wall if no position; clearance warnings |
 | `move_item` | `{ placement_id, position }` | ok / clamped-to-bounds / clearance warnings |
 | `rotate_item` | `{ placement_id, degrees }` | ok; snapped angle |
+| `set_variant` | `{ placement_id, variant_id }` | ok; updated piece |
+| `duplicate_item` | `{ placement_id }` | new `placement_id`, offset; clearance warnings |
 | `remove_item` | `{ placement_id }` | ok |
 | `check_layout` | — | collisions, walkway widths below 0.75 m, pieces blocking a door/window |
+| `get_shopping_list` | — | placed pieces with quantities, unit price, line and grand total |
 
 ## Rendering notes
 

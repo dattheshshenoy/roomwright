@@ -26,7 +26,7 @@ id, then `add_item`/`set` — the sofa recolours. Switch to plan view. Open the
 shopping list in the inspector: every piece, quantities, total. Click "save image".
 
 **2:05 – 2:35 — why WebMCP**
-"The page exposes eight tools — add, move, rotate, remove, resize, check. The
+"The page exposes eleven tools — add, move, rotate, recolour, duplicate, remove, resize, check, price. The
 agent only ever touches semantic state: products, positions, clearances in metres.
 It never drives the camera or the drag handles. Taste and the final call stay with
 me. No backend — the room never leaves the browser."

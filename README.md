@@ -28,7 +28,8 @@ catalogue, drag to arrange, `R` to rotate, `Delete` to remove.
 
 ## The WebMCP tools
 
-Eight tools, registered while the planner is open and unregistered when it closes:
+Eleven tools, registered while the planner is open and unregistered when it closes
+(the top bar shows the live count and lists them):
 
 | Tool | Does |
 | --- | --- |
@@ -37,9 +38,12 @@ Eight tools, registered while the planner is open and unregistered when it close
 | `roomwright_add_item` | place a piece (auto-positioned, or at given x/z/rotation) |
 | `roomwright_move_item` | move a piece; clamped to stay inside the room |
 | `roomwright_rotate_item` | rotate a piece, snapped to 15 degrees |
+| `roomwright_set_variant` | change a piece's colour or material |
+| `roomwright_duplicate_item` | add another copy of a piece, offset so it doesn't overlap |
 | `roomwright_remove_item` | remove a piece |
 | `roomwright_set_room_dimensions` | resize the room |
 | `roomwright_check_layout` | collisions, blocked doors/windows, clearance, narrowest walkway |
+| `roomwright_get_shopping_list` | the placed pieces as a costed shopping list |
 
 They operate on semantic state only — products, positions, clearances in metres.
 They never drive the camera or the drag handles. Registration code:

@@ -11,6 +11,7 @@ import {
 import { useStore } from "../state/store";
 import { exportJSON, parseImport } from "../state/persistence";
 import { canvasPNG, downloadFile } from "../lib/download";
+import { ToolsBadge } from "./ToolsBadge";
 
 export function TopBar() {
   const view = useStore((s) => s.view);
@@ -46,9 +47,12 @@ export function TopBar() {
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-surface px-4">
-      <div className="flex items-baseline gap-2">
-        <span className="text-[15px] font-semibold tracking-tight">Roomwright</span>
-        <span className="section-label">room planner</span>
+      <div className="flex items-center gap-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-[15px] font-semibold tracking-tight">Roomwright</span>
+          <span className="section-label">room planner</span>
+        </div>
+        <ToolsBadge />
       </div>
 
       <div className="flex items-center gap-1">
