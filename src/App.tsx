@@ -1,5 +1,6 @@
 import { useWebMCPTools } from "./webmcp/register";
 import type { ModelContextToolDescriptor } from "./webmcp/modelContext";
+import { SceneCanvas } from "./scene/SceneCanvas";
 
 /** Phase-0 placeholder tool: proves the registration path end to end.
  *  Replaced by the eight real tools in the WebMCP phase. */
@@ -33,9 +34,7 @@ export function App() {
         </aside>
 
         <main className="relative bg-surface-sunk">
-          <div className="absolute inset-0 grid place-items-center">
-            <p className="text-sm text-text-muted">Scene mounts here in phase 1.</p>
-          </div>
+          <SceneCanvas />
         </main>
 
         <aside className="border-l border-border bg-surface p-4">
