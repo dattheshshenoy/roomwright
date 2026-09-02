@@ -204,10 +204,19 @@ export const useStore = create<Store>((set, get) => {
           : product.variants[0].id;
 
       const others = resolved();
+      const room = get().room;
       const spot =
         opts.x != null && opts.z != null
           ? { x: opts.x, z: opts.z, rotationY: snapAngle(opts.rotationY ?? 0) }
-          : autoPosition(product, others, get().room);
+          : autoPosition(product, others, room);
+
+      // A floor lamp with no explicit heading arcs toward the room centre, so a
+      // lamp dropped in a corner — or a mirrored pair — points the right way.
+      if (product.kind === "lamp" && opts.rotationY == null) {
+        spot.rotationY = snapAngle(
+          Math.atan2(spot.z - room.length / 2, room.width / 2 - spot.x),
+        );
+      }
 
       const draft: Placement = {
         id: nid("p"),
@@ -217,7 +226,7 @@ export const useStore = create<Store>((set, get) => {
         x: spot.x,
         z: spot.z,
       };
-      const c = clampToRoom(draft.x, draft.z, draft, product, get().room);
+      const c = clampToRoom(draft.x, draft.z, draft, product, room);
       draft.x = c.x;
       draft.z = c.z;
 

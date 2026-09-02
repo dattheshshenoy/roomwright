@@ -535,13 +535,17 @@ const duplicateItem = defineTool(
     const src = useStore.getState().placements.find((x) => x.id === args.placement_id);
     if (!src) return { ok: false, summary: "no such piece" };
     const room = useStore.getState().room;
+    // A lamp aims its arm at the room centre wherever it lands, so don't carry
+    // the source heading — mirroring an angle would point the copy's arm out.
+    const isLamp = getProduct(src.productId)?.kind === "lamp";
+    const keep = (angle: number) => (isLamp ? undefined : angle);
 
     const spot =
       args.mirror === "east-west"
-        ? { x: room.width - src.x, z: src.z, rotationY: -src.rotationY }
+        ? { x: room.width - src.x, z: src.z, rotationY: keep(-src.rotationY) }
         : args.mirror === "north-south"
-          ? { x: src.x, z: room.length - src.z, rotationY: Math.PI - src.rotationY }
-          : { x: src.x + 0.5, z: src.z + 0.5, rotationY: src.rotationY };
+          ? { x: src.x, z: room.length - src.z, rotationY: keep(Math.PI - src.rotationY) }
+          : { x: src.x + 0.5, z: src.z + 0.5, rotationY: keep(src.rotationY) };
 
     const res = useStore.getState().addPlacement(src.productId, { variantId: src.variantId, ...spot });
     if (!res.ok || !res.placementId)
