@@ -41,7 +41,7 @@ Nineteen tools, registered while the planner is open and unregistered (via
 | `roomwright_rotate_item` | rotate a piece, snapped to 15 degrees |
 | `roomwright_resize_item` | override a piece's width, depth, or height |
 | `roomwright_set_variant` | change a piece's colour or material |
-| `roomwright_duplicate_item` | add another copy of a piece, offset so it doesn't overlap |
+| `roomwright_duplicate_item` | add another copy of a piece — nudged clear, or mirrored to the opposite side |
 | `roomwright_remove_item` | remove a piece |
 | `roomwright_set_room_dimensions` | resize the room (1.5–20 m) |
 | `roomwright_set_opening` | add a door or window, or move / resize an existing one |

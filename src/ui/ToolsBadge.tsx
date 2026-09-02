@@ -74,7 +74,7 @@ const GROUPS: ToolGroup[] = [
       },
       {
         name: "duplicate_item",
-        blurb: "another copy of a piece, offset so it fits",
+        blurb: "another copy — nudged clear, or mirrored to the opposite side",
         icon: <Copy size={14} />,
       },
       { name: "remove_item", blurb: "take a piece out", icon: <TrashSimple size={14} /> },

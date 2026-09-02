@@ -521,23 +521,36 @@ const setVariant = defineTool(
 /** duplicate_item */
 const duplicateItem = defineTool(
   "roomwright_duplicate_item",
-  "Add another copy of a placed piece — same product and variant — offset slightly so it does not overlap. Useful for pairs of chairs, matching side tables, and the like.",
-  obj({ placement_id: str("from get_room") }, ["placement_id"]),
-  (args: { placement_id: string }) => {
+  'Add another copy of a placed piece — same product and variant. By default the copy is nudged clear of the original. Pass mirror to place it as a mirror image across the room\'s centre line instead: "east-west" for a matching piece on the opposite left/right side (same distance from its wall, heading flipped), "north-south" for front/back. Use "east-west" for a chair on each side of a sofa.',
+  obj(
+    {
+      placement_id: str("from get_room"),
+      mirror: str('optional — "east-west" or "north-south"', {
+        enum: ["east-west", "north-south"],
+      }),
+    },
+    ["placement_id"],
+  ),
+  (args: { placement_id: string; mirror?: "east-west" | "north-south" }) => {
     const src = useStore.getState().placements.find((x) => x.id === args.placement_id);
     if (!src) return { ok: false, summary: "no such piece" };
-    const res = useStore.getState().addPlacement(src.productId, {
-      variantId: src.variantId,
-      x: src.x + 0.5,
-      z: src.z + 0.5,
-      rotationY: src.rotationY,
-    });
+    const room = useStore.getState().room;
+
+    const spot =
+      args.mirror === "east-west"
+        ? { x: room.width - src.x, z: src.z, rotationY: -src.rotationY }
+        : args.mirror === "north-south"
+          ? { x: src.x, z: room.length - src.z, rotationY: Math.PI - src.rotationY }
+          : { x: src.x + 0.5, z: src.z + 0.5, rotationY: src.rotationY };
+
+    const res = useStore.getState().addPlacement(src.productId, { variantId: src.variantId, ...spot });
     if (!res.ok || !res.placementId)
       return { ok: false, summary: res.reason ?? "could not duplicate" };
     const p = useStore.getState().placements.find((x) => x.id === res.placementId)!;
+    const name = getProduct(src.productId)?.name;
     return {
       ok: true,
-      summary: `Duplicated ${getProduct(src.productId)?.name} at (${M2(p.x)}, ${M2(p.z)}) m.`,
+      summary: `${args.mirror ? "Mirrored" : "Duplicated"} ${name} to (${M2(p.x)}, ${M2(p.z)}) m.`,
       payload: { placement: describePlacement(p), issues: issuesFor(res.placementId) },
     };
   },
