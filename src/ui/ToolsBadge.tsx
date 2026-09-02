@@ -1,6 +1,7 @@
 import { useSyncExternalStore, type ReactNode } from "react";
 import {
   ArrowClockwise,
+  ArrowCounterClockwise,
   ArrowsOut,
   ArrowsOutCardinal,
   CaretDown,
@@ -15,7 +16,6 @@ import {
   PaintBrushBroad,
   Plus,
   Receipt,
-  Resize,
   Ruler,
   Selection,
   TrashSimple,
@@ -125,6 +125,11 @@ const GROUPS: ToolGroup[] = [
         blurb: "collisions, blocked doors, clearances, walkways",
         icon: <CheckCircle size={14} />,
       },
+      {
+        name: "reset_layout",
+        blurb: "clear everything back to the default room",
+        icon: <ArrowCounterClockwise size={14} />,
+      },
     ],
   },
   {
@@ -132,14 +137,9 @@ const GROUPS: ToolGroup[] = [
     hint: "openings in the walls",
     tools: [
       {
-        name: "add_opening",
-        blurb: "add a door or window to a wall",
+        name: "set_opening",
+        blurb: "add a door or window, or move / resize an existing one",
         icon: <DoorOpen size={14} />,
-      },
-      {
-        name: "update_opening",
-        blurb: "move or resize an opening, or switch door/window",
-        icon: <Resize size={14} />,
       },
       { name: "remove_opening", blurb: "take an opening out", icon: <TrashSimple size={14} /> },
     ],

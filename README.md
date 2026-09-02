@@ -28,14 +28,14 @@ catalogue, drag to arrange, `R` to rotate, `Delete` to remove.
 
 ## The WebMCP tools
 
-Seventeen tools, registered while the planner is open and unregistered when it
-closes (the top bar shows the live count and lists them):
+Nineteen tools, registered while the planner is open and unregistered (via
+`AbortSignal`) when it closes — the top bar shows the live count and lists them:
 
 | Tool | Does |
 | --- | --- |
 | `roomwright_get_room` | room dimensions, openings, and every placed piece with its id and size |
 | `roomwright_list_catalog` | the catalogue — ids, dimensions, variants, price, required clearance |
-| `roomwright_add_item` | place a piece (auto-positioned, or at given x/z/rotation) |
+| `roomwright_add_item` | place a piece by id, name, or name fragment (auto-positioned, or at given x/z/rotation) |
 | `roomwright_create_custom_item` | make a box, column, panel or platform at any size and place it |
 | `roomwright_move_item` | move a piece; clamped to stay inside the room |
 | `roomwright_rotate_item` | rotate a piece, snapped to 15 degrees |
@@ -44,16 +44,18 @@ closes (the top bar shows the live count and lists them):
 | `roomwright_duplicate_item` | add another copy of a piece, offset so it doesn't overlap |
 | `roomwright_remove_item` | remove a piece |
 | `roomwright_set_room_dimensions` | resize the room (1.5–20 m) |
-| `roomwright_add_opening` | add a door or window to a wall |
-| `roomwright_update_opening` | move or resize an opening, or switch door/window |
+| `roomwright_set_opening` | add a door or window, or move / resize an existing one |
 | `roomwright_remove_opening` | remove an opening |
 | `roomwright_suggest_spot` | where a piece could go — open floor, clear wall runs, candidate positions |
 | `roomwright_check_layout` | collisions, blocked doors/windows, clearance, narrowest walkway |
 | `roomwright_get_shopping_list` | the placed pieces as a costed shopping list |
+| `roomwright_select_item` | highlight a piece and open its Inspector |
+| `roomwright_set_view` | switch between orbit and top-down plan |
+| `roomwright_reset_layout` | clear everything back to the default room |
 
-They operate on semantic state only — products, positions, clearances in metres.
-They never drive the camera or the drag handles. Registration code:
-[`src/webmcp/`](src/webmcp/).
+They operate on the same store the UI does — products, positions, clearances in
+metres, plus the current view and selection. They never move the mouse or type.
+Registration code: [`src/webmcp/`](src/webmcp/).
 
 ## Develop
 

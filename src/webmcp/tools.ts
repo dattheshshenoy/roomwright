@@ -390,63 +390,63 @@ const checkLayout = defineTool(
   },
 );
 
-/** add_opening */
-const addOpening = defineTool(
-  "roomwright_add_opening",
-  "Add a door or window to a wall (north, south, east, or west). It is centred on the wall by default; use update_opening to set its exact offset and size. Returns the new opening_id.",
-  obj(
-    {
-      kind: str("door or window", { enum: ["door", "window"] }),
-      wall: str("which wall", { enum: ["north", "south", "east", "west"] }),
-    },
-    ["kind", "wall"],
-  ),
-  (args: { kind: "door" | "window"; wall: "north" | "south" | "east" | "west" }) => {
-    const res = useStore.getState().addOpening(args.kind, args.wall);
-    if (!res.ok || !res.id) return { ok: false, summary: "could not add opening" };
-    return {
-      ok: true,
-      summary: `Added a ${args.kind} to the ${args.wall} wall.`,
-      payload: { opening_id: res.id, openings: openingsPayload() },
-    };
-  },
-);
-
-/** update_opening */
-const updateOpening = defineTool(
-  "roomwright_update_opening",
-  "Change a door or window. Any of: wall, offset (metres from the wall's start corner), width, sill height (windows), opening height, or kind. Values are clamped to fit the wall and the ceiling.",
-  obj(
-    {
-      opening_id: str("from get_room"),
-      wall: str("move to this wall", { enum: ["north", "south", "east", "west"] }),
-      offset_m: num("distance from the wall's start corner to the opening's near edge"),
-      width_m: num("opening width"),
-      sill_m: num("height of the sill above the floor (windows)"),
-      height_m: num("opening height"),
-      kind: str("door or window", { enum: ["door", "window"] }),
-    },
-    ["opening_id"],
-  ),
+/** set_opening — add a door/window, or change an existing one */
+const setOpening = defineTool(
+  "roomwright_set_opening",
+  "Add or change a door or window. Omit opening_id to ADD one — give kind (door or window) and wall (north, south, east, west); it starts centred, and you may also pass offset_m, width_m, sill_m or height_m to place it exactly. Pass opening_id (from get_room) to CHANGE that opening — any of wall, offset_m (from the wall's start corner), width_m, sill_m (windows), height_m, or kind. Values are clamped to fit the wall and ceiling.",
+  obj({
+    opening_id: str("omit to add a new opening; give it to change an existing one"),
+    kind: str("door or window", { enum: ["door", "window"] }),
+    wall: str("which wall", { enum: ["north", "south", "east", "west"] }),
+    offset_m: num("distance from the wall's start corner to the opening's near edge"),
+    width_m: num("opening width"),
+    sill_m: num("height of the sill above the floor (windows)"),
+    height_m: num("opening height"),
+  }),
   (args: {
-    opening_id: string;
+    opening_id?: string;
+    kind?: "door" | "window";
     wall?: "north" | "south" | "east" | "west";
     offset_m?: number;
     width_m?: number;
     sill_m?: number;
     height_m?: number;
-    kind?: "door" | "window";
   }) => {
-    const res = useStore.getState().updateOpening(args.opening_id, {
+    const s = useStore.getState();
+    const patch = {
       wall: args.wall,
       offset: args.offset_m,
       width: args.width_m,
       sill: args.sill_m,
       height: args.height_m,
       kind: args.kind,
-    });
+    };
+
+    if (!args.opening_id) {
+      if (!args.kind || !args.wall)
+        return { ok: false, summary: "to add an opening, give both kind and wall" };
+      const added = s.addOpening(args.kind, args.wall);
+      if (!added.ok || !added.id) return { ok: false, summary: "could not add opening" };
+      const extra =
+        args.offset_m != null ||
+        args.width_m != null ||
+        args.sill_m != null ||
+        args.height_m != null;
+      if (extra) useStore.getState().updateOpening(added.id, patch);
+      return {
+        ok: true,
+        summary: `Added a ${args.kind} to the ${args.wall} wall.`,
+        payload: { opening_id: added.id, openings: openingsPayload() },
+      };
+    }
+
+    const res = s.updateOpening(args.opening_id, patch);
     if (!res.ok) return { ok: false, summary: res.reason ?? "could not update opening" };
-    return { ok: true, summary: "Opening updated.", payload: { openings: openingsPayload() } };
+    return {
+      ok: true,
+      summary: "Opening updated.",
+      payload: { opening_id: args.opening_id, openings: openingsPayload() },
+    };
   },
 );
 
@@ -598,6 +598,29 @@ const setSceneView = defineTool(
   },
 );
 
+/** reset_layout */
+const resetLayout = defineTool(
+  "roomwright_reset_layout",
+  "Clear everything and start over: removes every placed piece, every custom piece, and every opening you added, and restores the default room size and its original door and window. Undoable in the app. Use this when the user asks to start fresh.",
+  obj({}),
+  () => {
+    useStore.getState().reset();
+    const s = useStore.getState();
+    return {
+      ok: true,
+      summary: `Reset — default room ${M2(s.room.width)} x ${M2(s.room.length)} m, nothing placed.`,
+      payload: {
+        room: {
+          width_m: M2(s.room.width),
+          length_m: M2(s.room.length),
+          height_m: M2(s.room.height),
+          openings: openingsPayload(),
+        },
+      },
+    };
+  },
+);
+
 export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   getRoom,
   listCatalog,
@@ -610,12 +633,12 @@ export const ROOMWRIGHT_TOOLS: ModelContextToolDescriptor[] = [
   duplicateItem,
   removeItem,
   setRoomDimensions,
-  addOpening,
-  updateOpening,
+  setOpening,
   removeOpening,
   suggestSpot,
   checkLayout,
   getShoppingList,
   selectItem,
   setSceneView,
+  resetLayout,
 ];

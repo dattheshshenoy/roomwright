@@ -14,7 +14,7 @@ builders are parametric off `product.dims` — so several of these are small.
 | Auto-collapse rails on narrow viewports | Both rails collapse below 1100 px; the user stays in control otherwise |
 | `resize_item` tool + inspector W/D/H fields | A placement carries an optional `dims` override; `resolvePlacements` swaps it into the product so every builder, measurement and clearance check uses it. "Reset to catalogue" clears it |
 | `suggest_spot` tool | Grids the room, reports open floor + longest clear wall runs, returns up to three candidate positions biased toward an optional anchor and fitting an optional product |
-| Editable doors and windows | `add_opening` / `update_opening` / `remove_opening` tools + a Doors & windows section in the room inspector; `set_room_dimensions` re-fits openings when the room shrinks |
+| Editable doors and windows | `set_opening` / `remove_opening` tools + a Doors & windows section in the room inspector; `set_room_dimensions` re-fits openings when the room shrinks |
 | Discoverable Share menu | The loose export icons became a labelled menu: save image, export/import layout JSON, copy shopping list |
 
 Tool count: 16.
