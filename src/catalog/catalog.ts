@@ -1,7 +1,8 @@
 import type { Product } from "../state/types";
 
 /** Twelve pieces with real-world dimensions (metres) and messy, plausible
- *  prices. Names are house-brand style, not "Generic Sofa". */
+ *  prices in the affordable / first-apartment range. Names are house-brand
+ *  style, not "Generic Sofa". */
 export const CATALOG: Product[] = [
   {
     id: "sofa-halden",
@@ -9,7 +10,7 @@ export const CATALOG: Product[] = [
     kind: "sofa",
     category: "seating",
     dims: { w: 2.18, d: 0.94, h: 0.84 },
-    price: 1840,
+    price: 679,
     wallHugging: true,
     clearance: { front: 0.75 },
     variants: [
@@ -24,7 +25,7 @@ export const CATALOG: Product[] = [
     kind: "armchair",
     category: "seating",
     dims: { w: 0.82, d: 0.86, h: 0.78 },
-    price: 620,
+    price: 245,
     wallHugging: false,
     clearance: { front: 0.5 },
     variants: [
@@ -39,7 +40,7 @@ export const CATALOG: Product[] = [
     kind: "chair",
     category: "seating",
     dims: { w: 0.46, d: 0.52, h: 0.82 },
-    price: 145,
+    price: 49,
     wallHugging: false,
     clearance: { front: 0.45, back: 0.3 },
     variants: [
@@ -54,7 +55,7 @@ export const CATALOG: Product[] = [
     kind: "table",
     category: "tables",
     dims: { w: 1.6, d: 0.9, h: 0.74 },
-    price: 980,
+    price: 219,
     wallHugging: false,
     clearance: { sides: 0.9 },
     variants: [
@@ -68,7 +69,7 @@ export const CATALOG: Product[] = [
     kind: "coffeeTable",
     category: "tables",
     dims: { w: 1.1, d: 0.6, h: 0.4 },
-    price: 340,
+    price: 115,
     wallHugging: false,
     clearance: { front: 0.4 },
     variants: [
@@ -83,7 +84,7 @@ export const CATALOG: Product[] = [
     kind: "sideTable",
     category: "tables",
     dims: { w: 0.44, d: 0.44, h: 0.55 },
-    price: 120,
+    price: 42,
     wallHugging: false,
     clearance: {},
     variants: [
@@ -97,7 +98,7 @@ export const CATALOG: Product[] = [
     kind: "bed",
     category: "sleeping",
     dims: { w: 1.6, d: 2.12, h: 1.0 },
-    price: 1290,
+    price: 329,
     wallHugging: true,
     clearance: { sides: 0.6 },
     variants: [
@@ -112,7 +113,7 @@ export const CATALOG: Product[] = [
     kind: "shelf",
     category: "storage",
     dims: { w: 0.9, d: 0.32, h: 1.86 },
-    price: 470,
+    price: 89,
     wallHugging: true,
     clearance: { front: 0.75 },
     variants: [
@@ -127,7 +128,7 @@ export const CATALOG: Product[] = [
     kind: "screen",
     category: "storage",
     dims: { w: 1.8, d: 0.4, h: 0.52 },
-    price: 560,
+    price: 179,
     wallHugging: true,
     clearance: { front: 2.4 },
     variants: [
@@ -141,7 +142,7 @@ export const CATALOG: Product[] = [
     kind: "lamp",
     category: "lighting",
     dims: { w: 0.4, d: 0.4, h: 1.62 },
-    price: 210,
+    price: 72,
     wallHugging: false,
     clearance: {},
     variants: [
@@ -156,7 +157,7 @@ export const CATALOG: Product[] = [
     kind: "rug",
     category: "decor",
     dims: { w: 2.4, d: 1.7, h: 0.02 },
-    price: 380,
+    price: 129,
     wallHugging: false,
     clearance: {},
     variants: [
@@ -171,7 +172,7 @@ export const CATALOG: Product[] = [
     kind: "plant",
     category: "decor",
     dims: { w: 0.7, d: 0.7, h: 1.7 },
-    price: 95,
+    price: 34,
     wallHugging: false,
     clearance: {},
     variants: [
