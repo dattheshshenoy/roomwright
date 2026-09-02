@@ -6,8 +6,16 @@ import { computeShoppingList, resolveSelected } from "../state/selectors";
 import { useLayoutReport } from "../state/useLayoutReport";
 import { getProduct } from "../catalog/catalog";
 import { getVariant } from "../catalog/variants";
-import { formatFootprint, formatLength, formatPrice } from "../lib/units";
-import { Field, NumberInput } from "./primitives/Field";
+import {
+  type UnitSystem,
+  formatFootprint,
+  formatLength,
+  formatPrice,
+  toMeters,
+  toUnit,
+  unitLabel,
+} from "../lib/units";
+import { Field, LengthInput } from "./primitives/Field";
 import { Button } from "./primitives/Button";
 import { AgentLog } from "./AgentLog";
 
@@ -149,15 +157,15 @@ function PieceInspector() {
           </div>
           <div className="mt-1 grid grid-cols-3 gap-2">
             {(["w", "d", "h"] as const).map((k) => (
-              <NumberInput
-                key={k}
-                value={Number(product.dims[k].toFixed(2))}
-                min={0.15}
-                max={8}
-                step={0.05}
-                suffix={k === "w" ? "W" : k === "d" ? "D" : "H"}
-                onCommit={(v) => resizePlacement(placement.id, { [k]: v })}
-              />
+              <Field key={k} label={k === "w" ? "W" : k === "d" ? "D" : "H"}>
+                <LengthInput
+                  meters={product.dims[k]}
+                  min={0.15}
+                  max={8}
+                  unitSystem={unitSystem}
+                  onCommitMeters={(v) => resizePlacement(placement.id, { [k]: v })}
+                />
+              </Field>
             ))}
           </div>
         </div>
@@ -311,11 +319,13 @@ function OpeningsSection() {
                 <MiniNumber
                   label="Offset"
                   value={o.offset}
+                  unitSystem={unitSystem}
                   onCommit={(v) => updateOpening(o.id, { offset: v })}
                 />
                 <MiniNumber
                   label="Width"
                   value={o.width}
+                  unitSystem={unitSystem}
                   onCommit={(v) => updateOpening(o.id, { width: v })}
                 />
               </div>
@@ -335,21 +345,26 @@ type WallChoice = (typeof WALLS)[number];
 function MiniNumber({
   label,
   value,
+  unitSystem,
   onCommit,
 }: {
   label: string;
   value: number;
-  onCommit: (v: number) => void;
+  unitSystem: UnitSystem;
+  onCommit: (meters: number) => void;
 }) {
+  const shown = toUnit(value, unitSystem);
   return (
     <label className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-wide text-text-muted">{label}</span>
+      <span className="text-[10px] uppercase tracking-wide text-text-muted">
+        {label} ({unitLabel(unitSystem)})
+      </span>
       <input
         type="number"
-        step={0.1}
-        defaultValue={Number(value.toFixed(2))}
-        key={value}
-        onBlur={(e) => onCommit(Number(e.target.value))}
+        step={unitSystem === "imperial" ? 0.25 : 0.1}
+        defaultValue={shown}
+        key={`${unitSystem}:${shown}`}
+        onBlur={(e) => onCommit(toMeters(Number(e.target.value), unitSystem))}
         onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
         className="tabular w-full rounded border border-border bg-surface px-1 py-1 text-[12px] outline-none"
       />
@@ -377,30 +392,30 @@ function RoomInspector() {
 
       <div className="grid grid-cols-3 gap-2 px-4 py-4">
         <Field label="Width">
-          <NumberInput
-            value={room.width}
+          <LengthInput
+            meters={room.width}
             min={2}
             max={20}
-            onCommit={(v) => setRoomDimensions({ width: v })}
-            suffix="m"
+            unitSystem={unitSystem}
+            onCommitMeters={(v) => setRoomDimensions({ width: v })}
           />
         </Field>
         <Field label="Length">
-          <NumberInput
-            value={room.length}
+          <LengthInput
+            meters={room.length}
             min={2}
             max={20}
-            onCommit={(v) => setRoomDimensions({ length: v })}
-            suffix="m"
+            unitSystem={unitSystem}
+            onCommitMeters={(v) => setRoomDimensions({ length: v })}
           />
         </Field>
         <Field label="Height">
-          <NumberInput
-            value={room.height}
+          <LengthInput
+            meters={room.height}
             min={2.2}
             max={4.5}
-            onCommit={(v) => setRoomDimensions({ height: v })}
-            suffix="m"
+            unitSystem={unitSystem}
+            onCommitMeters={(v) => setRoomDimensions({ height: v })}
           />
         </Field>
       </div>

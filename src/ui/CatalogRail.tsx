@@ -4,7 +4,7 @@ import { CaretLeft, ListBullets, Plus, Trash } from "@phosphor-icons/react";
 import { CATALOG } from "../catalog/catalog";
 import type { Category, CustomShape, Product } from "../state/types";
 import { useStore } from "../state/store";
-import { formatFootprint, formatPrice } from "../lib/units";
+import { formatFootprint, formatPrice, toMeters, toUnit, unitLabel } from "../lib/units";
 import { KindIcon } from "./KindIcon";
 
 const ORDER: Category[] = ["seating", "tables", "sleeping", "storage", "lighting", "decor"];
@@ -153,9 +153,11 @@ function CustomSection({ unitSystem }: { unitSystem: "metric" | "imperial" }) {
             ))}
           </div>
           <div className={`grid gap-1.5 ${shape === "cylinder" ? "grid-cols-3" : "grid-cols-3"}`}>
-            <MiniField label="W" value={w} onChange={setW} />
-            {shape !== "cylinder" && <MiniField label="D" value={d} onChange={setD} />}
-            <MiniField label="H" value={h} onChange={setH} />
+            <MiniField label="W" value={w} unitSystem={unitSystem} onChange={setW} />
+            {shape !== "cylinder" && (
+              <MiniField label="D" value={d} unitSystem={unitSystem} onChange={setD} />
+            )}
+            <MiniField label="H" value={h} unitSystem={unitSystem} onChange={setH} />
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -219,22 +221,29 @@ function CustomSection({ unitSystem }: { unitSystem: "metric" | "imperial" }) {
 function MiniField({
   label,
   value,
+  unitSystem,
   onChange,
 }: {
   label: string;
   value: number;
-  onChange: (v: number) => void;
+  unitSystem: "metric" | "imperial";
+  onChange: (meters: number) => void;
 }) {
+  const shown = toUnit(value, unitSystem);
   return (
     <label className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-wide text-text-muted">{label}</span>
+      <span className="text-[10px] uppercase tracking-wide text-text-muted">
+        {label} ({unitLabel(unitSystem)})
+      </span>
       <input
         type="number"
-        step={0.1}
-        value={value}
+        step={unitSystem === "imperial" ? 0.25 : 0.1}
+        defaultValue={shown}
+        key={`${unitSystem}:${shown}`}
         min={0.1}
-        max={8}
-        onChange={(e) => onChange(Number(e.target.value))}
+        max={30}
+        onBlur={(e) => onChange(toMeters(Number(e.target.value), unitSystem))}
+        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
         className="tabular w-full rounded border border-border bg-surface px-1 py-1 text-[12px] outline-none"
       />
     </label>

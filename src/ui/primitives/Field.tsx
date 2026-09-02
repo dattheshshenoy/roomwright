@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { type UnitSystem, toMeters, toUnit, unitLabel } from "../../lib/units";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -39,5 +40,32 @@ export function NumberInput({
       />
       {suffix && <span className="tabular text-[11px] text-text-muted">{suffix}</span>}
     </div>
+  );
+}
+
+/** A length field that stores metres but shows and accepts the active unit, so
+ *  switching m ↔ ft rewrites the value instead of leaving a stale number. */
+export function LengthInput({
+  meters,
+  onCommitMeters,
+  unitSystem,
+  min,
+  max,
+}: {
+  meters: number;
+  onCommitMeters: (m: number) => void;
+  unitSystem: UnitSystem;
+  min?: number;
+  max?: number;
+}) {
+  return (
+    <NumberInput
+      value={toUnit(meters, unitSystem)}
+      min={min != null ? toUnit(min, unitSystem) : undefined}
+      max={max != null ? toUnit(max, unitSystem) : undefined}
+      step={unitSystem === "imperial" ? 0.25 : 0.05}
+      suffix={unitLabel(unitSystem)}
+      onCommit={(v) => onCommitMeters(toMeters(v, unitSystem))}
+    />
   );
 }

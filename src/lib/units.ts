@@ -22,6 +22,17 @@ export function formatFootprint(w: number, d: number, system: UnitSystem): strin
   return `${formatLength(w, system)} x ${formatLength(d, system)}`;
 }
 
+/** Short unit label for the active system. */
+export const unitLabel = (system: UnitSystem): string => (system === "imperial" ? "ft" : "m");
+
+/** Metres → a number in the active unit, rounded for an editable field. */
+export const toUnit = (m: number, system: UnitSystem): number =>
+  Math.round((system === "imperial" ? m / M_PER_FT : m) * 100) / 100;
+
+/** An editable-field number in the active unit → metres. */
+export const toMeters = (v: number, system: UnitSystem): number =>
+  system === "imperial" ? v * M_PER_FT : v;
+
 export function formatPrice(usd: number): string {
   return usd.toLocaleString("en-US", {
     style: "currency",
